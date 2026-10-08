@@ -938,9 +938,10 @@ class LectureNotes(db.Model):
 
     # Foreign keys
     static_file_id: str = Column(
-        String(length=default_id_length), ForeignKey(StaticFile.id), nullable=False, index=True
+        String(length=default_id_length), ForeignKey(StaticFile.id), nullable=True, index=True
     )
     course_id: str = Column(String(length=default_id_length), ForeignKey(Course.id), nullable=False, index=True)
+    external_url = Column(Text(length=2 ** 14), nullable=True)
 
     # Meta fields
     post_time: datetime = Column(DateTime, nullable=True, default=datetime.now)
@@ -956,7 +957,8 @@ class LectureNotes(db.Model):
     def data(self):
         return {
             "id":           self.id,
-            "static_file":  self.static_file.data,
+            "static_file":  self.static_file.data if self.static_file else None,
+            "external_url": self.external_url,
             "course":       self.course.course_code,
             "title":        self.title,
             "description":  self.description,

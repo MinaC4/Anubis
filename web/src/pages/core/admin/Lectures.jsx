@@ -39,7 +39,7 @@ const useColumns = (state, enqueueSnackbar) => ([
   {field: 'post_time', headerName: 'Post Time', width: 160},
   {field: 'title', headerName: 'Lecture Title', width: 300},
   {
-    field: 'a', headerName: 'Lecture File', width: 300, renderCell: ({row}) => (
+    field: 'a', headerName: 'Lecture Resource', width: 300, renderCell: ({row}) => (
       <div>
         <Typography
           variant={'body1'}
@@ -47,9 +47,11 @@ const useColumns = (state, enqueueSnackbar) => ([
           style={{display: 'inline'}}
           component={'a'}
           target={'_blank'}
-          href={`${window.location.origin}/api/public/static${row.static_file.path}/${row.static_file.filename}`}
+          href={row.external_url || `${window.location.origin}/api/public/static` +
+            `${row.static_file?.path}/${row.static_file?.filename}`}
+          rel="noopener noreferrer"
         >
-          {row.static_file.filename}
+          {row.external_url || row.static_file?.filename}
         </Typography>
       </div>
     ),

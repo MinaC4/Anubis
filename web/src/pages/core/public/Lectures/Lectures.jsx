@@ -49,7 +49,8 @@ const Lectures = () => {
           postTime = {lecture.post_time}
           title = {lecture.title}
           id = {lecture.id}
-          fileAttachment = {get_href(lecture)}
+          fileAttachment = {lecture.static_file ? get_href(lecture) : null}
+          externalUrl = {lecture.external_url}
         />
       ))}
     </StandardLayout>

@@ -39,24 +39,26 @@ const useStyles = makeStyles((theme) => ({
 const uploadLecture = (state, enqueueSnackbar) => () => {
   const {
     file, setFile,
+    externalUrl, setExternalUrl,
     title, setTitle,
     postTime,
     setOpen,
     setReset,
   } = state;
 
-  const form = new FormData();
-  form.append('image', file);
+  const form = file ? new FormData() : {};
+  if (file) form.append('image', file);
 
   axios.post('/api/admin/lectures/upload', form, {
-    params: {post_time: nonStupidDatetimeFormat(postTime), title, description: ''},
-    headers: {'Content-Type': 'multipart/form-data'},
+    params: {post_time: nonStupidDatetimeFormat(postTime), title, description: '', external_url: externalUrl},
+    headers: file ? {'Content-Type': 'multipart/form-data'} : {},
   }).then((response) => {
     const data = standardStatusHandler(response, enqueueSnackbar);
     if (data) {
       setReset((prev) => ++prev);
       setOpen(false);
       setFile(null);
+      setExternalUrl('');
       setTitle('');
     }
   }).catch(standardErrorHandler(enqueueSnackbar));
@@ -67,6 +69,7 @@ export default function FileUploadDialog({setReset}) {
   const {enqueueSnackbar} = useSnackbar();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState(null);
+  const [externalUrl, setExternalUrl] = useState('');
   const [postTime, setPostTime] = useState(new Date());
   const [title, setTitle] = useState('');
 
@@ -77,6 +80,7 @@ export default function FileUploadDialog({setReset}) {
     setReset,
     open, setOpen,
     file, setFile,
+    externalUrl, setExternalUrl,
     title, setTitle,
     postTime, setPostTime,
   };
@@ -96,7 +100,7 @@ export default function FileUploadDialog({setReset}) {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">Upload file</DialogTitle>
+        <DialogTitle id="alert-dialog-title">Add course material</DialogTitle>
         <DialogContent>
 
           <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -118,6 +122,14 @@ export default function FileUploadDialog({setReset}) {
             variant={'outlined'}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+          />
+          <TextField
+            fullWidth
+            className={classes.field}
+            label={'External course link (optional)'}
+            variant={'outlined'}
+            value={externalUrl}
+            onChange={(e) => setExternalUrl(e.target.value)}
           />
           <List>
             <ListItem key={'file'}>
@@ -147,10 +159,10 @@ export default function FileUploadDialog({setReset}) {
             autoFocus
             color="primary"
             variant="contained"
-            disabled={file === null}
+            disabled={file === null && externalUrl.trim() === ''}
             onClick={uploadLecture(state, enqueueSnackbar)}
           >
-            Upload
+            Add
           </Button>
         </DialogActions>
       </Dialog>

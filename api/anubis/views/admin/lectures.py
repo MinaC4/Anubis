@@ -1,4 +1,5 @@
 from datetime import datetime
+from urllib.parse import urlparse
 
 from dateutil.parser import parse as date_parse
 from flask import Blueprint, request
@@ -97,6 +98,19 @@ def admin_lecture_save(lecture_notes_id: str):
     post_time = request.args.get("post_time", default=None)
     title = request.args.get("title", default="")
     description = request.args.get("description", default="")
+    external_url = request.args.get("external_url")
+    if external_url is not None:
+        external_url = external_url.strip()
+        parsed_url = urlparse(external_url) if external_url else None
+        req_assert(
+            not external_url or (
+                parsed_url.scheme in {"http", "https"}
+                and parsed_url.hostname
+                and parsed_url.username is None
+                and parsed_url.password is None
+            ),
+            message="Lecture link must be a valid HTTP or HTTPS URL without embedded credentials.",
+        )
 
     # If post time was in the http query, then try to parse it
     if isinstance(post_time, str):
@@ -119,13 +133,26 @@ def admin_lecture_save(lecture_notes_id: str):
     # Assert that the static file is within the current course context
     assert_course_context(lecture_notes)
 
-    # Pull file from request (if there is one)
-    stream, filename = get_request_file_stream(with_filename=True, fail_ok=True)
+    blob = None
+    if request.files and lecture_notes.static_file is None:
+        blob = process_file_upload()
+        lecture_notes.static_file_id = blob.id
+        stream = None
+    else:
+        stream, filename = get_request_file_stream(with_filename=True, fail_ok=True)
 
     # Update fields
     lecture_notes.post_time = post_time
     lecture_notes.title = title
     lecture_notes.description = description
+
+    if external_url is not None:
+        lecture_notes.external_url = external_url or None
+
+    req_assert(
+        stream is not None or blob is not None or lecture_notes.static_file is not None or lecture_notes.external_url,
+        message="A lecture must have a file or an external link.",
+    )
 
     if stream is not None:
         lecture_notes.static_file.blob = stream
@@ -165,6 +192,7 @@ def admin_lecture_upload():
     post_time = request.args.get("post_time", default=None)
     title = request.args.get("title", default="")
     description = request.args.get("description", default="")
+    external_url = request.args.get("external_url", default="").strip()
 
     # If post time was in the http query, then try to parse it
     if isinstance(post_time, str):
@@ -178,13 +206,29 @@ def admin_lecture_upload():
     if post_time is None:
         post_time = datetime.now()
 
-    # Process the file upload
-    blob = process_file_upload()
+    # A lecture can be a file, an external link, or both.
+    has_file = bool(request.files)
+    parsed_url = urlparse(external_url) if external_url else None
+    req_assert(
+        has_file or external_url,
+        message="Upload a file or provide a lecture link.",
+    )
+    req_assert(
+        not external_url or (
+            parsed_url.scheme in {"http", "https"}
+            and parsed_url.hostname
+            and parsed_url.username is None
+            and parsed_url.password is None
+        ),
+        message="Lecture link must be a valid HTTP or HTTPS URL without embedded credentials.",
+    )
+    blob = process_file_upload() if has_file else None
 
     # Create the lecture notes to match
     lecture_notes = LectureNotes(
-        static_file_id=blob.id,
+        static_file_id=blob.id if blob else None,
         course_id=course_context.id,
+        external_url=external_url or None,
         post_time=post_time,
         title=title,
         description=description,
@@ -196,7 +240,7 @@ def admin_lecture_upload():
     # Pass back the status
     return success_response(
         {
-            "status": f"{blob.filename} uploaded",
-            "blob": blob.data,
+            "status": f"{blob.filename} uploaded" if blob else "Lecture link added",
+            "blob": blob.data if blob else None,
         }
     )

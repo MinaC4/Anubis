@@ -1,5 +1,4 @@
 import React from 'react';
-import {useHistory} from 'react-router-dom';
 
 // Reference for Icons: https://mui.com/components/material-icons/?query=assignment
 import FeaturedVideoIcon from '@mui/icons-material/FeaturedVideo';
@@ -14,8 +13,8 @@ const LectureItem = ({
   title,
   id,
   fileAttachment,
+  externalUrl,
 }) => {
-  const history = useHistory();
   const classes = useStyles();
 
   return (
@@ -27,9 +26,8 @@ const LectureItem = ({
     >
       <Typography className = {classes.postTimeText}>{postTime}</Typography>
       <Typography>{title}</Typography>
-      <Button component="a" href={fileAttachment} target="_blank" rel="noreferer" onClick = {() =>
-        history.push(fileAttachment)}>
-          View Lecture Attachment
+      <Button component="a" href={externalUrl || fileAttachment} target="_blank" rel="noopener noreferrer">
+        {externalUrl ? 'Open course link' : 'View Lecture Attachment'}
       </Button>
     </Item>
   );
