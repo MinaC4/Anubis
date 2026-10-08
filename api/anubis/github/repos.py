@@ -30,8 +30,8 @@ def split_github_repo_url(repo_url: str | None) -> tuple[str, str] | None:
 
 def get_github_template_ids(template_repo: str, github_org: str):
     id_query = """
-    query githubTemplateInfo($orgName: String!, $templateName: String!, $templateOwner: String!) {  
-      organization(login: $orgName) {
+    query githubTemplateInfo($ownerName: String!, $templateName: String!, $templateOwner: String!) {
+      repositoryOwner(login: $ownerName) {
         id
       }
 
@@ -45,7 +45,7 @@ def get_github_template_ids(template_repo: str, github_org: str):
     return github_graphql(
         id_query,
         {
-            "orgName":       github_org,
+            "ownerName":     github_org,
             "templateName":  github_template_name,
             "templateOwner": github_template_owner,
         },
@@ -371,7 +371,11 @@ def create_assignment_github_repo(
 
             # If the response was None, the api request failed. Also check that
             # some expected values are present in the json data response.
-            if "repository" not in data or "id" not in data["repository"]:
+            if (
+                not data.get("repositoryOwner")
+                or not data.get("repository")
+                or not data["repository"].get("id")
+            ):
                 # set all repos to failed
                 for repo in repos:
                     repo.repo_created = False
@@ -384,8 +388,8 @@ def create_assignment_github_repo(
 
                 return repos, list(errors)
 
-            # Get organization and template repo IDs
-            owner_id = data["organization"]["id"]
+            # RepositoryOwner supports both personal accounts and organizations.
+            owner_id = data["repositoryOwner"]["id"]
             template_repo_id = data["repository"]["id"]
 
             # Try to create the student's assignment repo from the template
@@ -417,6 +421,11 @@ def create_assignment_github_repo(
                 collaborator = repo.owner.github_username
                 if is_debug():
                     collaborator = 'wabscale'
+
+                if github_org and collaborator and collaborator.casefold() == github_org.casefold():
+                    repo.collaborator_configured = True
+                    db.session.commit()
+                    continue
 
                 for i in range(3):
                     # Use github REST api to add the student as a collaborator
@@ -482,6 +491,9 @@ def create_assignment_github_repo(
                     continue
 
                 # Mark the repo as collaborator configured
+                repo.ta_configured = True
+                db.session.commit()
+            elif not repo.ta_configured:
                 repo.ta_configured = True
                 db.session.commit()
     except Exception as e:

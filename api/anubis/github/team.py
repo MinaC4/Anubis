@@ -2,6 +2,8 @@ from anubis.github.api import github_rest
 
 
 def list_github_team_members(org: str, team: str) -> list[str]:
+    if not org or not team:
+        return []
     return [
         user['login']
         for user in github_rest(f"/orgs/{org}/teams/{team}/members?per_page=100")
@@ -10,8 +12,12 @@ def list_github_team_members(org: str, team: str) -> list[str]:
 
 
 def add_github_team_member(org: str, team: str, username: str):
+    if not org or not team or not username:
+        return
     github_rest(f"/orgs/{org}/teams/{team}/memberships/{username}", method="put")
 
 
 def remote_github_team_member(org: str, team: str, username: str):
+    if not org or not team or not username:
+        return
     github_rest(f"/orgs/{org}/teams/{team}/memberships/{username}", method="delete")

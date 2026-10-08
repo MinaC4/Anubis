@@ -5,6 +5,7 @@ from flask import Blueprint
 from sqlalchemy.exc import DataError, IntegrityError
 
 from anubis.github.team import add_github_team_member, remote_github_team_member
+from anubis.github.api import get_github_token
 from anubis.constants import ANUBIS_IMAGE_REGISTRY
 from anubis.constants import THEIA_DEFAULT_OPTIONS
 from anubis.env import env
@@ -70,7 +71,12 @@ def admin_courses_new():
         course_code="placeholder",
         section="a",
         professor_display_name=current_user.name or current_user.netid,
-        github_repo_required=not bool(env.LOCAL_AUTH_USERNAME),
+        github_repo_required=(
+            not bool(env.LOCAL_AUTH_USERNAME)
+            or bool(current_user.github_username and get_github_token())
+        ),
+        github_org=current_user.github_username or "os3224",
+        github_ta_team_slug="" if env.LOCAL_AUTH_USERNAME else "tas",
         theia_default_image=TheiaImage.query.filter_by(
             image=f"{ANUBIS_IMAGE_REGISTRY}/theia-base",
         ).first(),

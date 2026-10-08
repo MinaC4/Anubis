@@ -185,6 +185,8 @@ def public_github_link():
         for professor_course in current_user.professor_for_course:
             if professor_course.course.github_org == "os3224":
                 professor_course.course.github_org = github_user["login"]
+                professor_course.course.github_ta_team_slug = ""
+                professor_course.course.github_repo_required = True
         db.session.commit()
         return redirect("/profile")
 

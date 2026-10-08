@@ -15,7 +15,7 @@ api:
   replicas: 1
   workers: 1
   image: 192.168.1.8:30082/anubis/api
-  tag: personal-6
+  tag: personal-7
 web:
   replicas: 1
   image: 192.168.1.8:30082/anubis/web
@@ -55,7 +55,8 @@ visuals:
 daily_reaper:
   enable: false
 github_reaper:
-  enable: false
+  enable: true
+  suspend: true
 autograde_reaper:
   enable: false
 ide_reaper:

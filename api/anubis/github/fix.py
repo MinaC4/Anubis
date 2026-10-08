@@ -46,31 +46,34 @@ def fix_github_missing_submissions(org_name: str):
     # Do graphql nonsense
     # Refer to here for graphql over https: https://graphql.org/learn/serving-over-http/
     query = """
-    query githubCommits($orgName: String!, $first: Int!, $after: String) {
-      organization(login: $orgName) {
-        repositories(after: $after, first: $first, orderBy: {field: CREATED_AT, direction: DESC}) {
-          pageInfo {
-            endCursor
+    query githubCommits($ownerName: String!, $first: Int!, $after: String) {
+      repositoryOwner(login: $ownerName) {
+        ... on Organization {
+          repositories(after: $after, first: $first, orderBy: {field: CREATED_AT, direction: DESC}) {
+            pageInfo { endCursor }
+            nodes { ...RepositoryCommits }
           }
-          nodes {
-            defaultBranchRef {
-              target {
-                ... on Commit {
-                  history(first: 20) {
-                    edges {
-                      node {
-                        oid
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            name
-            url
+        }
+        ... on User {
+          repositories(affiliations: [OWNER], after: $after, first: $first, orderBy: {field: CREATED_AT, direction: DESC}) {
+            pageInfo { endCursor }
+            nodes { ...RepositoryCommits }
           }
         }
       }
+    }
+    fragment RepositoryCommits on Repository {
+      defaultBranchRef {
+        target {
+          ... on Commit {
+            history(first: 20) {
+              edges { node { oid } }
+            }
+          }
+        }
+      }
+      name
+      url
     }
     """
 
@@ -78,7 +81,7 @@ def fix_github_missing_submissions(org_name: str):
     after = None
     for _ in range(20):
         # Make the github query
-        data = github_graphql(query, {"orgName": org_name, "first": query_size, "after": after})
+        data = github_graphql(query, {"ownerName": org_name, "first": query_size, "after": after})
 
         # Check that the data is there
         if data is None:
@@ -86,9 +89,13 @@ def fix_github_missing_submissions(org_name: str):
             return
 
         # Get organization and repositories from response
-        organization = data["organization"]
-        repositories = organization["repositories"]["nodes"]
-        after = organization["repositories"]["pageInfo"]["endCursor"]
+        owner = data.get("repositoryOwner")
+        if owner is None:
+            logger.warning(f'GitHub owner not found: {org_name}')
+            return
+        repository_page = owner.get("repositories") or {}
+        repositories = repository_page.get("nodes") or []
+        after = (repository_page.get("pageInfo") or {}).get("endCursor")
 
         # Running map of unique_code -> assignment objects
         assignments = dict()
@@ -162,3 +169,6 @@ def fix_github_missing_submissions(org_name: str):
 
             if repo:
                 print(f"checked repo: {repo_name} {user.github_username} {user} {repo.id}")
+
+        if not after:
+            break

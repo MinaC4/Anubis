@@ -26,7 +26,7 @@ spec:
           restartPolicy: Never
           containers:
           - name: github-reaper
-            image: "{{ .Values.api.image }}:{{ .Values.tag }}"
+            image: "{{ .Values.api.image }}:{{ .Values.api.tag | default .Values.tag }}"
             imagePullPolicy: {{ .Values.imagePullPolicy | quote }}
             command: ["python3", "anubis/jobs/github_reaper.py"]
             env:
