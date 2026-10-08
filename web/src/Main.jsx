@@ -44,7 +44,9 @@ export default function Main({user}) {
         <AboutRedirect user={user}/>
       </Route>
       <Route exact path={'/'}>
-        {user === null ? <Redirect to={'/about'}/> : <Redirect to={'/visuals'}/>}
+        {user === null ? <Redirect to={'/about'}/> : (
+          <Redirect to={window.location.hostname.endsWith('.nip.io') ? '/dashboard' : '/visuals'}/>
+        )}
       </Route>
       <Route>
         <NotFound/>

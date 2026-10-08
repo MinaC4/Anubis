@@ -2,6 +2,7 @@ from flask import Blueprint
 from sqlalchemy.exc import DataError, IntegrityError
 
 from anubis.github.team import add_github_team_member, remote_github_team_member
+from anubis.env import env
 from anubis.lms.courses import assert_course_superuser, course_context, valid_join_code
 from anubis.models import Course, InCourse, ProfessorForCourse, TAForCourse, User, db
 from anubis.rpc.enqueue import enqueue_bulk_create_students
@@ -59,11 +60,17 @@ def admin_courses_new():
         name="placeholder",
         course_code="placeholder",
         section="a",
-        professor_display_name="placeholder",
+        professor_display_name=current_user.name or current_user.netid,
+        github_repo_required=not bool(env.LOCAL_AUTH_USERNAME),
     )
 
     # Add it to the session
     db.session.add(course)
+
+    if env.LOCAL_AUTH_USERNAME:
+        db.session.flush()
+        db.session.add(ProfessorForCourse(owner_id=current_user.id, course_id=course.id))
+        db.session.add(InCourse(owner_id=current_user.id, course_id=course.id))
 
     # Commit the new Course
     db.session.commit()

@@ -3,6 +3,7 @@ import axios from 'axios';
 import {format} from 'date-fns';
 import {useSnackbar} from 'notistack';
 import {Route, Switch} from 'react-router-dom';
+import Cookies from 'universal-cookie';
 
 import Grid from '@mui/material/Grid';
 
@@ -50,11 +51,12 @@ const editableFields = [
 export default function Course() {
   const classes = useStyles();
   const {enqueueSnackbar} = useSnackbar();
+  const user = React.useContext(AuthContext);
   const [course, setCourse] = useState(null);
   const [edits, setEdits] = useState(0);
-  const [reset, setReset] = useState(0);
 
   React.useEffect(() => {
+    if (user === undefined || !user?.admin_for?.length) return;
     axios.get('/api/admin/courses/list').then((response) => {
       const data = standardStatusHandler(response, enqueueSnackbar);
       if (data?.course) {
@@ -62,7 +64,7 @@ export default function Course() {
         setCourse(data.course);
       }
     }).catch(standardErrorHandler(enqueueSnackbar));
-  }, [reset]);
+  }, [user]);
 
   const updateField = (id, field, toggle = false, datetime = false, json = false) => (e) => {
     if (course.id === id) {
@@ -96,14 +98,36 @@ export default function Course() {
   const createCourse = () => {
     axios.get('/api/admin/courses/new').then((response) => {
       const data = standardStatusHandler(response, enqueueSnackbar);
-      if (data) {
-        setReset((prev) => ++prev);
+      if (data?.course?.id) {
+        new Cookies().set('course', btoa(JSON.stringify({
+          id: data.course.id,
+          name: data.course.name,
+        })), {path: '/'});
+        window.location.reload();
       }
     }).catch(standardErrorHandler(enqueueSnackbar));
   };
 
   if (!course) {
-    return null;
+    return (
+      <Grid container spacing={4} justifyContent={'center'}>
+        <Grid item xs={12}>
+          <Typography variant="h6">Anubis</Typography>
+          <Typography variant={'subtitle1'} color={'textSecondary'}>
+            Course Management
+          </Typography>
+        </Grid>
+        <AuthContext.Consumer>
+          {(user) => user?.is_superuser && (
+            <Grid item xs={12}>
+              <Button variant={'contained'} color={'primary'} onClick={createCourse}>
+                Create Course
+              </Button>
+            </Grid>
+          )}
+        </AuthContext.Consumer>
+      </Grid>
+    );
   }
 
   return (

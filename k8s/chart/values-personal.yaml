@@ -15,10 +15,11 @@ api:
   replicas: 1
   workers: 1
   image: 192.168.1.8:30082/anubis/api
+  tag: personal-4
 web:
   replicas: 1
   image: 192.168.1.8:30082/anubis/web
-  tag: personal-3
+  tag: personal-4
 pipeline:
   api:
     replicas: 1
