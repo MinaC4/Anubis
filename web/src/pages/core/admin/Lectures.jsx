@@ -35,6 +35,21 @@ const deleteFile = ({id}, state, enqueueSnackbar) => () => {
   }).catch(standardErrorHandler(enqueueSnackbar));
 };
 
+const importCartridge = (event, enqueueSnackbar, setReset) => {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file) return;
+
+  const form = new FormData();
+  form.append('cartridge', file);
+  axios.post('/api/admin/lectures/import-common-cartridge', form, {
+    headers: {'Content-Type': 'multipart/form-data'},
+  }).then((response) => {
+    const data = standardStatusHandler(response, enqueueSnackbar);
+    if (data) setReset((prev) => ++prev);
+  }).catch(standardErrorHandler(enqueueSnackbar));
+};
+
 const useColumns = (state, enqueueSnackbar) => ([
   {field: 'post_time', headerName: 'Post Time', width: 160},
   {field: 'title', headerName: 'Lecture Title', width: 300},
@@ -132,6 +147,18 @@ export default function Static() {
         </Grid>
         <Grid item xs={12}>
           <LectureUploadDialog className={classes.button} setReset={setReset}/>
+          <input
+            id="common-cartridge-input"
+            type="file"
+            accept=".imscc,.zip"
+            hidden
+            onChange={(event) => importCartridge(event, enqueueSnackbar, setReset)}
+          />
+          <label htmlFor="common-cartridge-input">
+            <Button className={classes.button} variant="contained" component="span">
+              Import Common Cartridge Links
+            </Button>
+          </label>
           <LectureEditDialog
             lecture={openEdit}
             open={openEdit !== null}
@@ -139,6 +166,9 @@ export default function Static() {
             className={classes.button}
             setReset={setReset}
           />
+          <Typography variant="caption" color="textSecondary">
+            Imports IMS web links from .imscc packages. Other package content is skipped.
+          </Typography>
         </Grid>
         <Grid item/>
         <Grid item xs={12} md={12} lg={10}>

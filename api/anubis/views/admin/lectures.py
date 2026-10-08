@@ -5,10 +5,11 @@ from dateutil.parser import parse as date_parse
 from flask import Blueprint, request
 
 from anubis.lms.courses import assert_course_context, course_context
+from anubis.lms.common_cartridge import extract_web_links
 from anubis.models import LectureNotes, db
 from anubis.utils.auth.http import require_admin
 from anubis.utils.data import req_assert
-from anubis.utils.http import get_request_file_stream, success_response
+from anubis.utils.http import error_response, get_request_file_stream, success_response
 from anubis.utils.http.decorators import json_response
 from anubis.utils.http.files import get_mime_type, process_file_upload
 
@@ -244,3 +245,43 @@ def admin_lecture_upload():
             "blob": blob.data if blob else None,
         }
     )
+
+
+@lectures_.post("/import-common-cartridge")
+@require_admin(unless_debug=True)
+@json_response
+def admin_lecture_import_common_cartridge():
+    upload = request.files.get("cartridge")
+    req_assert(upload is not None, message="Choose a Common Cartridge .imscc file.")
+
+    try:
+        links, skipped = extract_web_links(upload.stream.read(25 * 1024 * 1024 + 1))
+    except ValueError as error:
+        return error_response(str(error))
+
+    existing = {
+        lecture.external_url
+        for lecture in LectureNotes.query.filter(LectureNotes.course_id == course_context.id).all()
+        if lecture.external_url
+    }
+    imported = 0
+    for title, url in links:
+        if url in existing:
+            skipped += 1
+            continue
+        db.session.add(LectureNotes(
+            course_id=course_context.id,
+            external_url=url,
+            title=title,
+            post_time=datetime.now(),
+        ))
+        existing.add(url)
+        imported += 1
+
+    req_assert(imported > 0, message="All supported cartridge links already exist in this course.")
+    db.session.commit()
+    return success_response({
+        "status": f"Imported {imported} course links; skipped {skipped} unsupported or duplicate resources.",
+        "imported": imported,
+        "skipped": skipped,
+    })
