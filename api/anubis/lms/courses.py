@@ -318,7 +318,7 @@ def assert_course_context(*models: tuple[Any]):
                 raise LackCourseContext("Student is not within this course context")
 
 
-def valid_join_code(join_code: str) -> bool:
+def valid_join_code(join_code: str | None) -> bool:
     """
     Validate code to make sure that all the characters are ok.
 
@@ -331,7 +331,7 @@ def valid_join_code(join_code: str) -> bool:
 
     # Make sure the join code is 6 chars long, and
     # all the chars exist in the valid_chars set.
-    return all(c in valid_chars for c in join_code)
+    return isinstance(join_code, str) and all(c in valid_chars for c in join_code)
 
 
 @cache.memoize(timeout=5, unless=is_debug)

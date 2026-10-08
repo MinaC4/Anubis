@@ -8,7 +8,7 @@ from anubis.models import Course, InCourse, ProfessorForCourse, TAForCourse, Use
 from anubis.rpc.enqueue import enqueue_bulk_create_students
 from anubis.utils.auth.http import require_admin, require_superuser
 from anubis.utils.auth.user import current_user
-from anubis.utils.data import req_assert, row2dict
+from anubis.utils.data import rand, req_assert, row2dict
 from anubis.utils.data import verify_data_shape
 from anubis.utils.http import error_response, success_response
 from anubis.utils.http.decorators import json_endpoint, json_response
@@ -26,6 +26,10 @@ def admin_courses_list():
 
     :return:
     """
+
+    if course_context.join_code is None:
+        course_context.join_code = rand(8)
+        db.session.commit()
 
     course_data = row2dict(course_context)
     if course_context.theia_default_image_id is not None:
@@ -62,6 +66,7 @@ def admin_courses_new():
         section="a",
         professor_display_name=current_user.name or current_user.netid,
         github_repo_required=not bool(env.LOCAL_AUTH_USERNAME),
+        join_code=rand(8),
     )
 
     # Add it to the session
@@ -108,6 +113,7 @@ def admin_courses_save_id(course: dict):
     assert_course_superuser(course_id)
 
     # Check that the join code is valid
+    course["join_code"] = course.get("join_code") or db_course.join_code or rand(8)
     req_assert(
         valid_join_code(course["join_code"]),
         message="Invalid join code. Lowercase letters and numbers only.",
