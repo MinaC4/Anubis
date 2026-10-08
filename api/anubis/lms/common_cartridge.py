@@ -4,6 +4,7 @@ import zipfile
 import zlib
 from urllib.parse import urlparse
 from xml.etree import ElementTree
+from anubis.utils.urls import is_safe_http_url
 
 
 MAX_PACKAGE_SIZE = 25 * 1024 * 1024
@@ -106,8 +107,7 @@ def extract_web_links(package):
                 (element.get("href") for element in descriptor_xml.iter() if _local_name(element) == "url"),
                 None,
             )
-            parsed = urlparse(url or "")
-            if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username or parsed.password:
+            if not is_safe_http_url(url):
                 raise ValueError("Common Cartridge contains a web link that is not a safe HTTP or HTTPS URL.")
 
             descriptor_title = next(
@@ -115,7 +115,7 @@ def extract_web_links(package):
                  if _local_name(element) == "title" and element.text and element.text.strip()),
                 "",
             )
-            title = titles.get(resource.get("identifier")) or descriptor_title or parsed.hostname
+            title = titles.get(resource.get("identifier")) or descriptor_title or urlparse(url).hostname
             links.append((title[:16384], url))
 
         if not links:

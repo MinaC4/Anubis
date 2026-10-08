@@ -1,5 +1,4 @@
 from datetime import datetime
-from urllib.parse import urlparse
 
 from dateutil.parser import parse as date_parse
 from flask import Blueprint, request
@@ -12,6 +11,7 @@ from anubis.utils.data import req_assert
 from anubis.utils.http import error_response, get_request_file_stream, success_response
 from anubis.utils.http.decorators import json_response
 from anubis.utils.http.files import get_mime_type, process_file_upload
+from anubis.utils.urls import is_safe_http_url
 
 lectures_ = Blueprint("admin-lectures", __name__, url_prefix="/admin/lectures")
 
@@ -102,14 +102,8 @@ def admin_lecture_save(lecture_notes_id: str):
     external_url = request.args.get("external_url")
     if external_url is not None:
         external_url = external_url.strip()
-        parsed_url = urlparse(external_url) if external_url else None
         req_assert(
-            not external_url or (
-                parsed_url.scheme in {"http", "https"}
-                and parsed_url.hostname
-                and parsed_url.username is None
-                and parsed_url.password is None
-            ),
+            not external_url or is_safe_http_url(external_url),
             message="Lecture link must be a valid HTTP or HTTPS URL without embedded credentials.",
         )
 
@@ -209,18 +203,12 @@ def admin_lecture_upload():
 
     # A lecture can be a file, an external link, or both.
     has_file = bool(request.files)
-    parsed_url = urlparse(external_url) if external_url else None
     req_assert(
         has_file or external_url,
         message="Upload a file or provide a lecture link.",
     )
     req_assert(
-        not external_url or (
-            parsed_url.scheme in {"http", "https"}
-            and parsed_url.hostname
-            and parsed_url.username is None
-            and parsed_url.password is None
-        ),
+        not external_url or is_safe_http_url(external_url),
         message="Lecture link must be a valid HTTP or HTTPS URL without embedded credentials.",
     )
     blob = process_file_upload() if has_file else None

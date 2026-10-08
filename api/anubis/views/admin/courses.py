@@ -1,5 +1,4 @@
 import copy
-from urllib.parse import urlparse
 
 from flask import Blueprint
 from sqlalchemy.exc import DataError, IntegrityError
@@ -18,6 +17,7 @@ from anubis.utils.data import rand, req_assert, row2dict
 from anubis.utils.data import verify_data_shape
 from anubis.utils.http import error_response, success_response
 from anubis.utils.http.decorators import json_endpoint, json_response
+from anubis.utils.urls import is_safe_http_url
 
 courses_ = Blueprint("admin-courses", __name__, url_prefix="/admin/courses")
 
@@ -136,9 +136,8 @@ def admin_courses_save_id(course: dict):
 
     course_url = course.get("course_url")
     if course_url:
-        parsed_url = urlparse(course_url) if isinstance(course_url, str) else None
         req_assert(
-            parsed_url is not None and parsed_url.scheme in {"http", "https"} and parsed_url.netloc,
+            is_safe_http_url(course_url),
             message="Course link must be a valid HTTP or HTTPS URL.",
         )
 
