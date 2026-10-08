@@ -1,10 +1,15 @@
+import copy
+from urllib.parse import urlparse
+
 from flask import Blueprint
 from sqlalchemy.exc import DataError, IntegrityError
 
 from anubis.github.team import add_github_team_member, remote_github_team_member
+from anubis.constants import ANUBIS_IMAGE_REGISTRY
+from anubis.constants import THEIA_DEFAULT_OPTIONS
 from anubis.env import env
 from anubis.lms.courses import assert_course_superuser, course_context, valid_join_code
-from anubis.models import Course, InCourse, ProfessorForCourse, TAForCourse, User, db
+from anubis.models import Course, InCourse, ProfessorForCourse, TAForCourse, TheiaImage, User, db
 from anubis.rpc.enqueue import enqueue_bulk_create_students
 from anubis.utils.auth.http import require_admin, require_superuser
 from anubis.utils.auth.user import current_user
@@ -66,6 +71,17 @@ def admin_courses_new():
         section="a",
         professor_display_name=current_user.name or current_user.netid,
         github_repo_required=not bool(env.LOCAL_AUTH_USERNAME),
+        theia_default_image=TheiaImage.query.filter_by(
+            image=f"{ANUBIS_IMAGE_REGISTRY}/theia-base",
+        ).first(),
+        theia_default_options={
+            **copy.deepcopy(THEIA_DEFAULT_OPTIONS),
+            "persistent_storage": True,
+            "resources": {
+                "requests": {"cpu": "250m", "memory": "512Mi"},
+                "limits": {"cpu": "1", "memory": "1Gi"},
+            },
+        },
         join_code=rand(8),
     )
 
@@ -111,6 +127,14 @@ def admin_courses_save_id(course: dict):
 
     # Assert that the current user is a professor or a superuser
     assert_course_superuser(course_id)
+
+    course_url = course.get("course_url")
+    if course_url:
+        parsed_url = urlparse(course_url) if isinstance(course_url, str) else None
+        req_assert(
+            parsed_url is not None and parsed_url.scheme in {"http", "https"} and parsed_url.netloc,
+            message="Course link must be a valid HTTP or HTTPS URL.",
+        )
 
     # Check that the join code is valid
     course["join_code"] = course.get("join_code") or db_course.join_code or rand(8)

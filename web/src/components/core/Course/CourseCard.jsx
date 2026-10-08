@@ -60,7 +60,7 @@ export default function CourseCard({course, _disabled, editableFields, updateFie
 
         <BatchAddInput onAdd={onBatchAddStudents} isOpen={isBatchModalOpen}/>
         <Grid container spacing={2}>
-          {editableFields.map(({field, label, type = 'text', disabled = false}) => {
+          {editableFields.map(({field, label, type = 'text', disabled = false, multiline = false}) => {
             switch (field) {
             case 'theia_default_image':
               return (
@@ -86,6 +86,8 @@ export default function CourseCard({course, _disabled, editableFields, updateFie
                     variant={'outlined'}
                     label={label}
                     value={course[field]}
+                    multiline={multiline}
+                    minRows={multiline ? 3 : undefined}
                     onChange={updateField(course.id, field)}
                   />
                 </Grid>

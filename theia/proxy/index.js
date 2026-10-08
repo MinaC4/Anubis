@@ -213,5 +213,4 @@ process.on('uncaughtException', function (error) {
 })
 
 console.log("starting at 0.0.0.0:5000");
-console.log(`SECRET_KEY = ${SECRET_KEY}`);
 proxyServer.listen(5000);

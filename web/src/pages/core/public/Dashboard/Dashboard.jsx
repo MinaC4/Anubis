@@ -64,6 +64,8 @@ const Dashboard = () => {
           assignments={course.total_assignments}
           section={course.section}
           id={course.id}
+          description={course.description}
+          courseUrl={course.course_url}
         />
       ))}
       {activeAssignments && (

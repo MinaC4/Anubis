@@ -10,6 +10,7 @@ from flask import Blueprint, make_response, redirect, request
 
 from anubis.constants import NYU_DOMAIN
 from anubis.env import env
+from anubis.github.api import get_github_token, github_rest
 from anubis.lms.courses import get_course_context
 from anubis.models import User, db, UserSource
 from anubis.utils.auth.oauth import OAUTH_REMOTE_APP_GITHUB as github_provider
@@ -172,6 +173,21 @@ def public_oauth():
 
 @github_oauth_.route("/login")
 def public_github_link():
+    if env.LOCAL_AUTH_USERNAME:
+        if current_user is None:
+            raise AuthenticationError()
+        if not get_github_token():
+            return "GitHub is not configured. Add a GitHub token to the Kubernetes secret named git.", 503
+        github_user = github_rest("/user")
+        if not isinstance(github_user, dict) or not github_user.get("login"):
+            return "GitHub token is invalid or cannot read the authenticated user.", 502
+        current_user.github_username = github_user["login"]
+        for professor_course in current_user.professor_for_course:
+            if professor_course.course.github_org == "os3224":
+                professor_course.course.github_org = github_user["login"]
+        db.session.commit()
+        return redirect("/profile")
+
     if current_user is None:
         user_access_code: str | None = get_string_arg('access_code', default_value=None)
         real_access_code: str = get_config_str('GITHUB_STUDY_ACCESS_CODE', None)

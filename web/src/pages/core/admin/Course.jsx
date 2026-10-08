@@ -34,6 +34,8 @@ const useStyles = makeStyles((theme) => ({
 
 const editableFields = [
   {field: 'name', label: 'Course Name'},
+  {field: 'description', label: 'Course Description', multiline: true},
+  {field: 'course_url', label: 'Course Link'},
   {field: 'course_code', label: 'Course Code'},
   {field: 'section', label: 'Section'},
   {field: 'professor_display_name', label: 'Professor'},

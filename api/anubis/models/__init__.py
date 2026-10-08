@@ -110,6 +110,8 @@ class Course(db.Model):
 
     # Fields
     name = Column(Text(length=2 ** 14), nullable=False)
+    description = Column(Text(length=2 ** 14), nullable=True)
+    course_url = Column(Text(length=2 ** 14), nullable=True)
     course_code = Column(Text(length=2 ** 14), nullable=False)
     semester = Column(Text(length=2 ** 14), nullable=True)
     section = Column(Text(length=2 ** 14), nullable=True)
@@ -163,6 +165,8 @@ class Course(db.Model):
         return {
             "id":                     self.id,
             "name":                   self.name,
+            "description":            self.description,
+            "course_url":             self.course_url,
             "course_code":            self.course_code,
             "section":                self.section,
             "professor_display_name": self.professor_display_name,

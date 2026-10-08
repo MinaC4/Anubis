@@ -12,7 +12,7 @@ def get_github_token() -> str | None:
     token = os.environ.get("GITHUB_TOKEN", None)
 
     # If we could not get the token, log and return None
-    if token is None:
+    if not token:
         logger.error("MISSING GITHUB_TOKEN")
         return None
 

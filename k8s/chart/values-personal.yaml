@@ -15,11 +15,11 @@ api:
   replicas: 1
   workers: 1
   image: 192.168.1.8:30082/anubis/api
-  tag: personal-5
+  tag: personal-6
 web:
   replicas: 1
   image: 192.168.1.8:30082/anubis/web
-  tag: personal-4
+  tag: personal-5
 pipeline:
   api:
     replicas: 1
@@ -33,6 +33,7 @@ theia:
   proxy:
     replicas: 1
     image: 192.168.1.8:30082/anubis/theia-proxy
+    tag: personal-3
     portMin: 8000
     portMax: 8001
   prop:

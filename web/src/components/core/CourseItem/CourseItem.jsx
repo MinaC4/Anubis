@@ -13,6 +13,8 @@ const CourseItem = ({
   instructor,
   assignments,
   id,
+  description,
+  courseUrl,
 }) => {
   const history = useHistory();
   const classes = useStyles();
@@ -26,7 +28,13 @@ const CourseItem = ({
       link={`/course?courseId=${id}`}
     >
       <Typography className={classes.instructorText}>{instructor}</Typography>
+      {description && <Typography className={classes.instructorText}>{description}</Typography>}
       <Typography className={classes.assignmentsText}>{assignments} Assignments</Typography>
+      {courseUrl && (
+        <Button color={'primary'} component="a" href={courseUrl} target="_blank" rel="noopener noreferrer">
+          Open Course Link
+        </Button>
+      )}
       <Button
         color={'primary'}
         variant={'contained'}
