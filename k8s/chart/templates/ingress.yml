@@ -1,5 +1,5 @@
 # Strip prefix /api
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: strip-api
@@ -12,7 +12,7 @@ spec:
 ---
 
 # Strip prefix /ide
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: strip-ide
@@ -25,7 +25,7 @@ spec:
 ---
 
 # Strip prefix /docs
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: strip-docs
@@ -38,7 +38,7 @@ spec:
 ---
 
 # Strip prefix /autograde
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: strip-autograde
@@ -50,14 +50,14 @@ spec:
       - "/autograde"
 ---
 
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: ingress.route.anubis.api.public
   labels:
     {{- include "chart.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.debug }}
+  {{- if and (not .Values.debug) (not .Values.localMode) }}
   entryPoints:
   - websecure
   {{- else }}
@@ -72,14 +72,14 @@ spec:
     services:
     - name: {{ include "chart.fullname" . }}-api
       port: 5000
-  {{- if not .Values.debug }}
+  {{- if and (not .Values.debug) (not .Values.localMode) }}
   tls:
     certResolver: le
   {{- end }}
 ---
 
 # Public Ingress Route /*
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: ingress.route.anubis.web
@@ -87,7 +87,7 @@ metadata:
     {{- include "chart.labels" . | nindent 4 }}
     component: web
 spec:
-  {{- if .Values.debug }}
+  {{- if or .Values.debug .Values.localMode }}
   entryPoints:
     - web
   {{- else }}
@@ -100,7 +100,7 @@ spec:
     services:
     - name: {{ include "chart.fullname" . }}-web
       port: 3000
-  {{- if not .Values.debug }}
+  {{- if and (not .Values.debug) (not .Values.localMode) }}
   tls:
     certResolver: le
   {{- end }}
@@ -108,7 +108,7 @@ spec:
 
 {{- range untilStep (.Values.theia.proxy.portMin | int) (add .Values.theia.proxy.portMax 1 | int) 1 }}
 # Public Ingress Route ide8000.anubis-lms.io/
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: ingress.route.anubis.theia-proxy-{{ . }}.public
@@ -116,7 +116,7 @@ metadata:
     {{- include "chart.labels" $ | nindent 4 }}
     component: proxy
 spec:
-  {{- if $.Values.debug }}
+  {{- if or $.Values.debug $.Values.localMode }}
   entryPoints:
     - web
   {{- else }}
@@ -136,7 +136,7 @@ spec:
     services:
     - name: {{ include "chart.fullname" $ }}-theia-proxy
       port: 5000
-  {{- if not $.Values.debug }}
+  {{- if and (not $.Values.debug) (not $.Values.localMode) }}
   tls:
     certResolver: le
   {{- end }}
@@ -144,7 +144,8 @@ spec:
 {{- end }}
 
 # Public Ingress Route /*
-apiVersion: traefik.containo.us/v1alpha1
+{{- if .Values.marketing.enable }}
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: ingress.route.anubis.marketing-web
@@ -152,7 +153,7 @@ metadata:
     {{- include "chart.labels" . | nindent 4 }}
     component: marketing-web
 spec:
-  {{- if .Values.debug }}
+  {{- if or .Values.debug .Values.localMode }}
   entryPoints:
     - web
   {{- else }}
@@ -165,14 +166,16 @@ spec:
     services:
     - name: {{ include "chart.fullname" . }}-marketing-web
       port: {{ .Values.marketing.port }}
-  {{- if not .Values.debug }}
+  {{- if and (not .Values.debug) (not .Values.localMode) }}
   tls:
     certResolver: le
   {{- end }}
 ---
+{{- end }}
 
 # pincer Ingress Route /*
-apiVersion: traefik.containo.us/v1alpha1
+{{- if .Values.pincer.enable }}
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: ingress.route.anubis.pincer-web
@@ -180,7 +183,7 @@ metadata:
     {{- include "chart.labels" . | nindent 4 }}
     component: pincer-web
 spec:
-  {{- if .Values.debug }}
+  {{- if or .Values.debug .Values.localMode }}
   entryPoints:
     - web
   {{- else }}
@@ -193,14 +196,16 @@ spec:
     services:
     - name: {{ include "chart.fullname" . }}-pincer-web
       port: {{ .Values.pincer.port }}
-  {{- if not .Values.debug }}
+  {{- if and (not .Values.debug) (not .Values.localMode) }}
   tls:
     certResolver: le
   {{- end }}
 ---
+{{- end }}
 
 # Public Ingress Route /*
-apiVersion: traefik.containo.us/v1alpha1
+{{- if .Values.cli_docs.enable }}
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: ingress.route.anubis.cli-docs
@@ -208,7 +213,7 @@ metadata:
     {{- include "chart.labels" . | nindent 4 }}
     component: cli-docs
 spec:
-  {{- if .Values.debug }}
+  {{- if or .Values.debug .Values.localMode }}
   entryPoints:
     - web
   {{- else }}
@@ -223,14 +228,16 @@ spec:
     services:
     - name: {{ include "chart.fullname" . }}-cli-docs
       port: 8080
-  {{- if not .Values.debug }}
+  {{- if and (not .Values.debug) (not .Values.localMode) }}
   tls:
     certResolver: le
   {{- end }}
 ---
+{{- end }}
 
 # Public Ingress Route /*
-apiVersion: traefik.containo.us/v1alpha1
+{{- if .Values.autograde_docs.enable }}
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: ingress.route.anubis.theia-autograde-docs
@@ -238,7 +245,7 @@ metadata:
     {{- include "chart.labels" . | nindent 4 }}
     component: theia-autograde-docs
 spec:
-  {{- if .Values.debug }}
+  {{- if or .Values.debug .Values.localMode }}
   entryPoints:
     - web
   {{- else }}
@@ -253,16 +260,17 @@ spec:
     services:
     - name: {{ include "chart.fullname" . }}-theia-autograde-docs
       port: 8080
-  {{- if not .Values.debug }}
+  {{- if and (not .Values.debug) (not .Values.localMode) }}
   tls:
     certResolver: le
   {{- end }}
 ---
+{{- end }}
 
 # For the anubis-lms.io redirect when we deploy that
-{{- if not .Values.debug }}
+{{- if and (not .Values.debug) (not .Values.localMode) }}
 # Redirect with domain replacement
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: redirect-to-new
@@ -275,7 +283,7 @@ spec:
     regex: ^https://anubis.osiris.services/(.*)
     replacement: https://anubis-lms.io/${1}
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: ingress.route.anubis.redirect.public

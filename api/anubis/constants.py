@@ -1,4 +1,8 @@
 # Standard IDE variables
+import os
+
+ANUBIS_IMAGE_REGISTRY = os.environ.get("ANUBIS_IMAGE_REGISTRY", "registry.digitalocean.com/anubis")
+
 THEIA_DEFAULT_NETWORK_POLICY: str = "student"
 THEIA_ADMIN_NETWORK_POLICY: str = "admin"
 THEIA_SHELL_AUTOGRADE_NETWORK_POLICY: str = 'shell-autograde-student'
@@ -19,7 +23,7 @@ THEIA_DEFAULT_OPTIONS = {
 }
 
 # Developer IDE variables
-DEVELOPER_DEFAULT_IMAGE = "registry.digitalocean.com/anubis/theia-base"
+DEVELOPER_DEFAULT_IMAGE = f"{ANUBIS_IMAGE_REGISTRY}/theia-base"
 DEVELOPER_DEFAULT_OPTIONS = {
     "autosave": False,
     "persistent_storage": True,
@@ -43,7 +47,7 @@ WEBTOP_DEFAULT_OPTIONS = {
 }
 
 # Autograde IDE related variables
-AUTOGRADE_IDE_DEFAULT_IMAGE = "registry.digitalocean.com/anubis/theia-jepst-test"
+AUTOGRADE_IDE_DEFAULT_IMAGE = f"{ANUBIS_IMAGE_REGISTRY}/theia-jepst-test"
 
 # NYU specific variables
 NYU_DOMAIN = 'anubis-lms.io'

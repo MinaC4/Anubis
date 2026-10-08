@@ -25,7 +25,11 @@ spec:
         {{- include "chart.selectorLabels" . | nindent 8 }}
         component: web
     spec:
-      {{- if and .Values.nodeSelector (not .Values.debug) }}
+      {{- if .Values.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecret }}
+      {{- end }}
+      {{- if and .Values.nodeSelector (not .Values.debug) (not .Values.localMode) }}
       nodeSelector:
         {{ .Values.nodeSelector | toYaml }}
       {{- end }}

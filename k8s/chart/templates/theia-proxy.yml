@@ -27,7 +27,8 @@ spec:
         {{- include "chart.selectorLabels" . | nindent 8 }}
         component: proxy
     spec:
-      {{- if and .Values.nodeSelector (not .Values.debug) }}
+      serviceAccountName: theia-ide
+      {{- if and .Values.nodeSelector (not .Values.debug) (not .Values.localMode) }}
       nodeSelector:
         {{ .Values.nodeSelector | toYaml }}
       {{- end }}
@@ -41,12 +42,21 @@ spec:
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         {{- if not .Values.debug}}
         resources:
+          {{- if .Values.localMode }}
+          requests:
+            cpu: 50m
+            memory: 96Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          {{- else }}
           requests:
             cpu: 250m
             memory: 250Mi
           limits:
             cpu: 2000m
             memory: 500Mi
+          {{- end }}
         {{- end }}
         ports:
         - name: http

@@ -1,13 +1,14 @@
 from kubernetes import client
 
 from anubis.env import env
+from anubis.constants import ANUBIS_IMAGE_REGISTRY
 from anubis.k8s.reserve.get import get_active_reserve_cronjobs
 from anubis.models import ReservedIDETime
 
 
 def create_reserve_ide_time(reserved_time: ReservedIDETime) -> client.V1CronJob:
     container = client.V1Container(
-        image="registry.digitalocean.com/anubis/api:latest",
+        image=f"{ANUBIS_IMAGE_REGISTRY}/api:latest",
         env=[
             client.V1EnvVar(name="PYTHONPATH", value="/opt/app"),
             client.V1EnvVar(name="MPLCONFIGDIR", value="/tmp"),

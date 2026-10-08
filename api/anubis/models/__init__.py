@@ -9,7 +9,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import scoped_session, deferred, relationship, InstrumentedAttribute
 from sqlalchemy.sql.schema import Column, ForeignKey
 
-from anubis.constants import THEIA_DEFAULT_OPTIONS, DB_COLLATION, DB_CHARSET
+from anubis.constants import ANUBIS_IMAGE_REGISTRY, THEIA_DEFAULT_OPTIONS, DB_COLLATION, DB_CHARSET
 from anubis.models.enum import UserSource
 from anubis.models.id import default_id_length, default_id
 from anubis.models.sqltypes import String, Text, DateTime, Boolean, JSON, Integer, Enum
@@ -683,7 +683,7 @@ class TheiaImage(db.Model):
     __table_args__ = {"mysql_charset": DB_CHARSET, "mysql_collate": DB_COLLATION}
 
     id = default_id()
-    image: str = Column(String(length=1024), nullable=False, default="registry.digitalocean.com/anubis/xv6")
+    image: str = Column(String(length=1024), nullable=False, default=f"{ANUBIS_IMAGE_REGISTRY}/xv6")
     title: str = Column(String(length=1024), default="")
     description = deferred(Column(Text(length=2 ** 14), default=""))
     icon: str = Column(String(length=1024), default="")

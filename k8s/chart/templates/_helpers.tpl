@@ -80,6 +80,8 @@ API env
   value: "0"
 - name: "DOMAIN"
   value: "{{ .Values.domain }}"
+- name: "ANUBIS_IMAGE_REGISTRY"
+  value: {{ .Values.imageRegistry | quote }}
 - name: "GITHUB_TOKEN"
   valueFrom:
     secretKeyRef:
@@ -90,6 +92,7 @@ API env
     secretKeyRef:
       name: api
       key: secret-key
+{{- if not .Values.localMode }}
 - name: "OAUTH_ENTRA_CLIENT_ID"
   valueFrom:
     secretKeyRef:
@@ -115,6 +118,26 @@ API env
     secretKeyRef:
       name: oauth
       key: github-consumer-secret
+{{- else }}
+- name: "LOCAL_AUTH_USERNAME"
+  valueFrom:
+    secretKeyRef:
+      name: local-auth
+      key: username
+- name: "LOCAL_AUTH_PASSWORD"
+  valueFrom:
+    secretKeyRef:
+      name: local-auth
+      key: password
+- name: "THEIA_MAX_SESSIONS"
+  value: "2"
+- name: "PIPELINE_MAX_JOBS"
+  value: "2"
+- name: "THEIA_STORAGE_ACCESS_MODE"
+  value: "ReadWriteOnce"
+- name: "THEIA_STORAGE_CLASS_NAME"
+  value: "local-path"
+{{- end }}
 - name: "DATABASE_URI"
   valueFrom:
     secretKeyRef:

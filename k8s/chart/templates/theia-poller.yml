@@ -75,7 +75,7 @@ spec:
         {{- include "chart.selectorLabels" . | nindent 8 }}
         component: poller
     spec:
-      {{- if and .Values.nodeSelector (not .Values.debug) }}
+      {{- if and .Values.nodeSelector (not .Values.debug) (not .Values.localMode) }}
       nodeSelector:
         {{ .Values.nodeSelector | toYaml }}
       {{- end }}
@@ -87,13 +87,21 @@ spec:
         args: ["python3", "/opt/app/anubis/jobs/theia_poller.py"]
         {{- if not .Values.debug}}
         resources:
+          {{- if .Values.localMode }}
+          requests:
+            cpu: 25m
+            memory: 96Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+          {{- else }}
           requests:
             cpu: 200m
             memory: 250Mi
           limits:
             cpu: 1000m
             memory: 500Mi
+          {{- end }}
         {{- end }}
         env:
         {{- include "api.env" . | nindent 8 }}
-

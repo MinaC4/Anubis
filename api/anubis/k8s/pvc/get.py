@@ -39,6 +39,7 @@ def get_user_pvc(user: User, theia_session: TheiaSession | None = None) -> tuple
     # we'll want to be able to set this on the fly from a config value. If we default
     # to None, then the cluster default storage class will be used.
     theia_storage_class_name = get_config_str("THEIA_STORAGE_CLASS_NAME", default=None)
+    theia_storage_access_mode = get_config_str("THEIA_STORAGE_ACCESS_MODE", default="ReadWriteMany")
 
     # Create the persistent volume claim object. Since this is a
     # ReadWriteMany volume, the default storage class should
@@ -53,7 +54,7 @@ def get_user_pvc(user: User, theia_session: TheiaSession | None = None) -> tuple
             },
         ),
         spec=k8s.V1PersistentVolumeClaimSpec(
-            access_modes=["ReadWriteMany"],
+            access_modes=[theia_storage_access_mode],
             volume_mode="Filesystem",
             storage_class_name=theia_storage_class_name,
             resources=k8s.V1ResourceRequirements(

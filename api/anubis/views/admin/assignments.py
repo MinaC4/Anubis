@@ -7,6 +7,7 @@ from flask import Blueprint
 from sqlalchemy.exc import DataError, IntegrityError
 
 from anubis.github.repos import delete_assignment_repo
+from anubis.constants import ANUBIS_IMAGE_REGISTRY
 from anubis.lms.assignments import assignment_sync, delete_assignment, delete_assignment_repos, get_assignment_tests
 from anubis.lms.courses import assert_course_context, course_context, is_course_superuser
 from anubis.lms.questions import get_assigned_questions
@@ -469,7 +470,7 @@ def private_assignment_sync(assignment: dict):
         "name": "{name}",
         "course": "CS-UY 3224",
         "unique_code": "{code}",
-        "pipeline_image": "registry.digitalocean.com/anubis/assignment/{code}"
+        "pipeline_image": f"{ANUBIS_IMAGE_REGISTRY}/assignment/{{code}}"
       }
     }
 

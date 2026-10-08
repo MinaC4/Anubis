@@ -4,6 +4,7 @@ import json
 from kubernetes import client as k8s, config as k8s_config
 
 from anubis.constants import (
+    ANUBIS_IMAGE_REGISTRY,
     THEIA_DEFAULT_OPTIONS,
     WEBTOP_DEFAULT_OPTIONS,
     THEIA_VALID_NETWORK_POLICIES,
@@ -276,7 +277,7 @@ def create_theia_k8s_pod_pvc(
     # the shared volume.
     init_container = k8s.V1Container(
         name=f"theia-init",
-        image="registry.digitalocean.com/anubis/theia-init",
+        image=f"{ANUBIS_IMAGE_REGISTRY}/theia-init",
         image_pull_policy="IfNotPresent",
         env=[
             # Git repo to clone
@@ -302,7 +303,7 @@ def create_theia_k8s_pod_pvc(
     # the repo between these two containers.
     autosave_container = k8s.V1Container(
         name="autosave",
-        image="registry.digitalocean.com/anubis/theia-autosave",
+        image=f"{ANUBIS_IMAGE_REGISTRY}/theia-autosave",
         image_pull_policy="IfNotPresent",
         env=[
             # set the AUTOSAVE environment variable to ON or OFF. If the variable
@@ -349,7 +350,7 @@ def create_theia_k8s_pod_pvc(
 
         dockerd_container = k8s.V1Container(
             name="dockerd",
-            image="registry.digitalocean.com/anubis/theia-dockerd",
+            image=f"{ANUBIS_IMAGE_REGISTRY}/theia-dockerd",
             image_pull_policy="IfNotPresent",
             env=[
                 k8s.V1EnvVar(name="ANUBIS_RUN_DOCKERD", value="1")
@@ -371,7 +372,7 @@ def create_theia_k8s_pod_pvc(
 
         dockerd_authz_container = k8s.V1Container(
             name="dockerd-authz",
-            image="registry.digitalocean.com/anubis/anubis-authz",
+            image=f"{ANUBIS_IMAGE_REGISTRY}/anubis-authz",
             image_pull_policy="IfNotPresent",
             # Add a security context to disable privilege escalation
             security_context=k8s.V1SecurityContext(
@@ -399,7 +400,7 @@ def create_theia_k8s_pod_pvc(
 
         autograde_container = k8s.V1Container(
             name="autograde",
-            image="registry.digitalocean.com/anubis/theia-autograde",
+            image=f"{ANUBIS_IMAGE_REGISTRY}/theia-autograde",
             image_pull_policy="IfNotPresent",
             env=[
                 k8s.V1EnvVar(name="NETID", value=netid),

@@ -35,9 +35,37 @@ def migrate_id(conn, table_name: str, new_size: int = 36):
 
 def do_migration(new_size: int = 36):
     conn = op.get_bind()
+    def quote(identifier):
+        return f"`{identifier.replace('`', '``')}`"
 
     with conn.begin() as trx:
-        conn.execute('SET FOREIGN_KEY_CHECKS=0;')
+        result = conn.execute(sa.text(
+            """SELECT k.TABLE_NAME, k.CONSTRAINT_NAME, k.COLUMN_NAME,
+                      k.REFERENCED_TABLE_NAME, k.REFERENCED_COLUMN_NAME,
+                      k.ORDINAL_POSITION, r.UPDATE_RULE, r.DELETE_RULE
+               FROM information_schema.KEY_COLUMN_USAGE k
+               JOIN information_schema.REFERENTIAL_CONSTRAINTS r
+                 ON r.CONSTRAINT_SCHEMA = k.CONSTRAINT_SCHEMA
+                AND r.CONSTRAINT_NAME = k.CONSTRAINT_NAME
+                AND r.TABLE_NAME = k.TABLE_NAME
+               WHERE k.TABLE_SCHEMA = DATABASE()
+                 AND k.REFERENCED_TABLE_NAME IS NOT NULL
+               ORDER BY k.TABLE_NAME, k.CONSTRAINT_NAME, k.ORDINAL_POSITION"""
+        ))
+        foreign_keys = {}
+        for row in result:
+            key = (row[0], row[1])
+            foreign_key = foreign_keys.setdefault(key, {
+                "columns": [], "referenced_table": row[3], "referenced_columns": [],
+                "on_update": row[6], "on_delete": row[7],
+            })
+            foreign_key["columns"].append(row[2])
+            foreign_key["referenced_columns"].append(row[4])
+
+        for table_name, constraint_name in foreign_keys:
+            conn.execute(sa.text(
+                f"ALTER TABLE {quote(table_name)} DROP FOREIGN KEY {quote(constraint_name)}"
+            ))
 
         for table_name in tables:
             migrate_id(conn, table_name, new_size)
@@ -54,8 +82,15 @@ def do_migration(new_size: int = 36):
                                 type_=sa.VARCHAR(length=new_size, collation='utf8mb4_general_ci'),
                                 nullable=nullable == 'YES')
 
-        conn.execute('SET FOREIGN_KEY_CHECKS=1;')
-
+        for (table_name, constraint_name), foreign_key in foreign_keys.items():
+            columns = ", ".join(map(quote, foreign_key["columns"]))
+            referenced_columns = ", ".join(map(quote, foreign_key["referenced_columns"]))
+            conn.execute(sa.text(
+                f"ALTER TABLE {quote(table_name)} ADD CONSTRAINT {quote(constraint_name)} "
+                f"FOREIGN KEY ({columns}) REFERENCES {quote(foreign_key['referenced_table'])} "
+                f"({referenced_columns}) ON UPDATE {foreign_key['on_update']} "
+                f"ON DELETE {foreign_key['on_delete']}"
+            ))
         trx.commit()
 
 

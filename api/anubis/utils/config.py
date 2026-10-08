@@ -1,4 +1,5 @@
 import json
+import os
 
 from anubis.models import db, Config
 from anubis.utils.cache import cache
@@ -65,7 +66,7 @@ def get_config_str(key: str, default: str | None = None) -> str | None:
     # Check that the config value exists
     if config_value is None:
         # Return default if entry was not found
-        return default
+        return os.environ.get(key, default)
 
     # Return the string value if it exists
     return config_value.value
@@ -140,5 +141,4 @@ def get_config_bool(key: str, default: bool = False) -> bool:
             return False
         case _:
             return default
-
 

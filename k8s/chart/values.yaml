@@ -2,6 +2,8 @@
 nameOverride: "anubis"
 fullnameOverride: ""
 debug: false
+localMode: false
+imageRegistry: "registry.digitalocean.com/anubis"
 rollingUpdates: true
 healthChecks: true
 domain: "anubis-lms.io"
@@ -210,4 +212,3 @@ hpa:
   - name: rpc-theia
   - name: rpc-regrade
 ###############################################################################
-

@@ -1,4 +1,6 @@
 import traceback
+import hmac
+from html import escape
 from urllib.parse import urlunparse
 from urllib.parse import quote
 
@@ -26,11 +28,48 @@ nyu_oauth_ = Blueprint("public-oauth", __name__, url_prefix="/public")
 github_oauth_ = Blueprint("public-github-oauth", __name__, url_prefix="/public/github")
 
 
-@auth_.route("/login")
+@auth_.route("/login", methods=["GET", "POST"])
 def public_login():
+    if env.LOCAL_AUTH_USERNAME and env.LOCAL_AUTH_PASSWORD:
+        if request.method == "POST":
+            password = request.form.get("password", "")
+            if not hmac.compare_digest(password.encode(), env.LOCAL_AUTH_PASSWORD.encode()):
+                return _local_login_page("Invalid password"), 401
+
+            user = User.query.filter_by(netid=env.LOCAL_AUTH_USERNAME).first()
+            if user is None:
+                user = User(
+                    netid=env.LOCAL_AUTH_USERNAME,
+                    name=env.LOCAL_AUTH_USERNAME,
+                    is_superuser=True,
+                    source=UserSource.NYU,
+                )
+                db.session.add(user)
+                db.session.commit()
+            elif user.disabled or not user.is_superuser:
+                return _local_login_page("Local account is unavailable"), 403
+
+            token = create_token(user.netid)
+            response = make_response(redirect("/"))
+            response.set_cookie("token", token, httponly=True, samesite="Lax")
+            return response
+
+        return _local_login_page()
+
     if is_debug():
         return "AUTH"
     return entra_provider.authorize(callback="https://{}/api/public/oauth".format(NYU_DOMAIN))
+
+
+def _local_login_page(error=None):
+    message = f"<p>{escape(error)}</p>" if error else ""
+    username = escape(env.LOCAL_AUTH_USERNAME)
+    return f"""<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Anubis sign in</title><body>
+<main><h1>Anubis</h1><p>Sign in as {username}</p>{message}
+<form method="post"><label>Password <input type="password" name="password" required autofocus></label>
+<button type="submit">Sign in</button></form></main></body></html>"""
 
 
 @auth_.route("/logout")

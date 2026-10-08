@@ -1,5 +1,6 @@
 from flask import Blueprint
 
+from anubis.constants import ANUBIS_IMAGE_REGISTRY
 from anubis.models import db, TheiaImage, TheiaImageTag
 from anubis.utils.auth.http import require_superuser
 from anubis.utils.http import success_response
@@ -58,7 +59,7 @@ def super_ide_images_save(images: list):
 @json_response
 def super_ide_images_new():
     image_db = TheiaImage(
-        image="registry.digitalocean.com/anubis/theia-cpp",
+        image=f"{ANUBIS_IMAGE_REGISTRY}/theia-cpp",
         title="NEWIMAGE",
         description="NEWIMAGE",
         icon="",

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from flask import Blueprint
 
-from anubis.constants import THEIA_ADMIN_NETWORK_POLICY
+from anubis.constants import ANUBIS_IMAGE_REGISTRY, THEIA_ADMIN_NETWORK_POLICY
 from anubis.ide.initialize import initialize_ide
 from anubis.k8s.theia.reap import reap_theia_sessions_in_course
 from anubis.lms.courses import course_context
@@ -21,7 +21,7 @@ ide = Blueprint("admin-ide", __name__, url_prefix="/admin/ide")
 
 def default_admin_ide() -> TheiaImage:
     image = TheiaImage.query.filter(
-        TheiaImage.image == "registry.digitalocean.com/anubis/theia-admin",
+        TheiaImage.image == f"{ANUBIS_IMAGE_REGISTRY}/theia-admin",
     ).first()
 
     return image

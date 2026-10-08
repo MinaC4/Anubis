@@ -1,0 +1,70 @@
+# Personal k3s profile for one or two LAN users.
+localMode: true
+debug: false
+domain: anubis.192.168.1.8.nip.io
+nodeSelector: {}
+ideNodeSelector: ""
+imagePullSecret: anubis
+imagePullPolicy: IfNotPresent
+imageRegistry: 192.168.1.8:30082/anubis
+tag: personal-2
+offSemester: true
+hpa:
+  enable: false
+api:
+  replicas: 1
+  workers: 1
+  image: 192.168.1.8:30082/anubis/api
+web:
+  replicas: 1
+  image: 192.168.1.8:30082/anubis/web
+pipeline:
+  api:
+    replicas: 1
+    workers: 1
+  poller:
+    replicas: 1
+theia:
+  enable: true
+  poller:
+    replicas: 1
+  proxy:
+    replicas: 1
+    image: 192.168.1.8:30082/anubis/theia-proxy
+    portMin: 8000
+    portMax: 8001
+  prop:
+    enable: false
+discord_bot:
+  enable: false
+marketing:
+  enable: false
+pincer:
+  enable: false
+cli_docs:
+  enable: false
+autograde_docs:
+  enable: false
+reaper:
+  enable: false
+visuals:
+  enable: false
+daily_reaper:
+  enable: false
+github_reaper:
+  enable: false
+autograde_reaper:
+  enable: false
+ide_reaper:
+  enable: false
+backup:
+  enable: false
+email:
+  enable: false
+autograde_shell_reaper:
+  enable: false
+reserve:
+  enable: false
+rpc:
+  replicas: 1
+  queues: [default, theia, regrade]

@@ -52,6 +52,8 @@ class EnvConfig(object):
         # Github OAuth
         self.OAUTH_GITHUB_CONSUMER_KEY = os.environ.get("OAUTH_GITHUB_CONSUMER_KEY", default="DEBUG")
         self.OAUTH_GITHUB_CONSUMER_SECRET = os.environ.get("OAUTH_GITHUB_CONSUMER_SECRET", default="DEBUG")
+        self.LOCAL_AUTH_USERNAME = os.environ.get("LOCAL_AUTH_USERNAME")
+        self.LOCAL_AUTH_PASSWORD = os.environ.get("LOCAL_AUTH_PASSWORD")
 
         # Github Tag
         self.GIT_TAG = os.environ.get("GIT_TAG", default="latest")
@@ -59,9 +61,8 @@ class EnvConfig(object):
         # Logger
         self.LOGGER_NAME = os.environ.get("LOGGER_NAME", default="anubis-api")
 
-        print("Starting with DATABASE_URI: {}".format(self.SQLALCHEMY_DATABASE_URI))
+        print("Starting with DATABASE_URI: configured")
         print("Starting with CACHE_TYPE: {}".format(self.CACHE_TYPE))
-        print("Starting with SECRET_KEY: {}".format(self.SECRET_KEY))
         print("Starting with MINDEBUG: {}".format(self.MINDEBUG))
         print("Starting with DEBUG: {}".format(self.DEBUG))
 
