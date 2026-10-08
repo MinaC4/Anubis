@@ -402,6 +402,12 @@ def create_assignment_github_repo(
                 errors.add('We were not able to create your repo on github. Please try again.')
                 return repos, list(errors)
 
+            created_repository = (data.get("cloneTemplateRepository") or {}).get("repository")
+            if not created_repository or not created_repository.get("id"):
+                logger.warning("GitHub did not return a created repository")
+                errors.add('GitHub could not create the repository. Check the template and token permissions.')
+                return repos, list(errors)
+
             # Mark the repo as created
             for repo in repos:
                 repo.repo_created = True

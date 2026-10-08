@@ -7,7 +7,7 @@ ideNodeSelector: ""
 imagePullSecret: anubis
 imagePullPolicy: IfNotPresent
 imageRegistry: 192.168.1.8:30082/anubis
-tag: personal-7
+tag: personal-8
 offSemester: true
 hpa:
   enable: false
@@ -15,7 +15,7 @@ api:
   replicas: 1
   workers: 1
   image: 192.168.1.8:30082/anubis/api
-  tag: personal-7
+  tag: personal-8
 web:
   replicas: 1
   image: 192.168.1.8:30082/anubis/web
