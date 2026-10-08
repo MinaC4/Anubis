@@ -100,3 +100,5 @@ spec:
         {{- end }}
         env:
         {{- include "api.env" . | nindent 8 }}
+        - name: ANUBIS_POLLER_INTERVAL_SECONDS
+          value: {{ .Values.pollerIntervalSeconds | quote }}

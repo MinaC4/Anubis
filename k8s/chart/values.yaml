@@ -14,6 +14,7 @@ imagePullSecret: "anubis"
 tag: "latest"
 revisionHistoryLimit: 3
 offSemester: false
+pollerIntervalSeconds: 1
 
 nodeSelector:
   doks.digitalocean.com/node-pool: pool-mfdxypigt
