@@ -18,6 +18,7 @@ api:
 web:
   replicas: 1
   image: 192.168.1.8:30082/anubis/web
+  tag: personal-3
 pipeline:
   api:
     replicas: 1
