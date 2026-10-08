@@ -7,7 +7,7 @@ ideNodeSelector: ""
 imagePullSecret: anubis
 imagePullPolicy: IfNotPresent
 imageRegistry: 192.168.1.8:30082/anubis
-tag: personal-2
+tag: personal-7
 offSemester: true
 hpa:
   enable: false
