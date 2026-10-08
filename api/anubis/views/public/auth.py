@@ -173,16 +173,17 @@ def public_oauth():
 
 @github_oauth_.route("/login")
 def public_github_link():
+    user = get_current_user()
     if env.LOCAL_AUTH_USERNAME:
-        if current_user is None:
+        if user is None:
             raise AuthenticationError()
         if not get_github_token():
             return "GitHub is not configured. Add a GitHub token to the Kubernetes secret named git.", 503
         github_user = github_rest("/user")
         if not isinstance(github_user, dict) or not github_user.get("login"):
             return "GitHub token is invalid or cannot read the authenticated user.", 502
-        current_user.github_username = github_user["login"]
-        for professor_course in current_user.professor_for_course:
+        user.github_username = github_user["login"]
+        for professor_course in user.professor_for_course:
             if professor_course.course.github_org == "os3224":
                 professor_course.course.github_org = github_user["login"]
                 professor_course.course.github_ta_team_slug = ""
@@ -190,7 +191,7 @@ def public_github_link():
         db.session.commit()
         return redirect("/profile")
 
-    if current_user is None:
+    if user is None:
         user_access_code: str | None = get_string_arg('access_code', default_value=None)
         real_access_code: str = get_config_str('GITHUB_STUDY_ACCESS_CODE', None)
 
@@ -248,10 +249,11 @@ def public_github_oauth():
         github_username = github_user_info["login"].strip()
 
         # If user exists
-        if current_user is not None:
+        user = get_current_user()
+        if user is not None:
             # set github username and commit
-            current_user.github_username = github_username
-            db.session.add(current_user)
+            user.github_username = github_username
+            db.session.add(user)
             db.session.commit()
 
         # Create new user for study

@@ -7,7 +7,7 @@ ideNodeSelector: ""
 imagePullSecret: anubis
 imagePullPolicy: IfNotPresent
 imageRegistry: 192.168.1.8:30082/anubis
-tag: personal-12
+tag: personal-13
 offSemester: true
 pollerIntervalSeconds: 5
 hpa:
@@ -16,7 +16,7 @@ api:
   replicas: 1
   workers: 1
   image: 192.168.1.8:30082/anubis/api
-  tag: personal-12
+  tag: personal-13
 web:
   replicas: 1
   image: 192.168.1.8:30082/anubis/web
@@ -61,7 +61,7 @@ github_reaper:
 autograde_reaper:
   enable: false
 ide_reaper:
-  enable: false
+  enable: true
 backup:
   enable: false
 email:
