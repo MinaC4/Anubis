@@ -62,6 +62,8 @@ spec:
         - name: http
           containerPort: 5000
         env:
+        - name: "LOCAL_MODE"
+          value: {{ .Values.localMode | quote }}
         {{- include "api.env" . | nindent 8 }}
         {{- if .Values.healthChecks }}
         startupProbe:

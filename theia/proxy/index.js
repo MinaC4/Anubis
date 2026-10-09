@@ -111,7 +111,9 @@ const initialize = (req, res, url, query) => {
     return;
   }
 
-  let domain = DEBUG ? 'localhost' : 'anubis-lms.io';
+  const localMode = process.env.LOCAL_MODE === 'true';
+  const cookieDomain = localMode ? '' : `; Domain=${process.env.DOMAIN || 'anubis-lms.io'}`;
+  const secureCookie = localMode ? '' : '; Secure; SameSite=Lax';
 
   // Set cookie for ide session & redirect
   const signed_token = jwt.sign({
@@ -119,7 +121,7 @@ const initialize = (req, res, url, query) => {
     session_id: query_token.session_id,
   }, SECRET_KEY, {expiresIn: '6h'});
   res.writeHead(302, {
-    location: '/ide/', "Set-Cookie": `ide=${signed_token}; Path=/; Domain=${domain}; Max-Age=${6 * 3600}; HttpOnly`
+    location: '/ide/', "Set-Cookie": `ide=${signed_token}; Path=/${cookieDomain}; Max-Age=${6 * 3600}; HttpOnly${secureCookie}`
   })
   res.end('redirecting...')
 };

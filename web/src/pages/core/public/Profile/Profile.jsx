@@ -8,6 +8,7 @@ import Button from '@mui/material/Button';
 import GitHub from '@mui/icons-material/GitHub';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import {useStyles} from './Profile.styles';
 import standardStatusHandler from '../../../../utils/standardStatusHandler';
@@ -21,6 +22,7 @@ import PrivacyPolicyModal from '../../../../components/shared/PrivacyPolicy/Priv
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [userGroup, setUserGroup] = useState(null);
+  const [loadError, setLoadError] = useState(false);
   const classes = useStyles();
   const {enqueueSnackbar} = useSnackbar();
 
@@ -29,8 +31,13 @@ const Profile = () => {
       const data = standardStatusHandler(response, enqueueSnackbar);
       if (data?.user) {
         setUser(data.user);
+      } else {
+        setLoadError(true);
       }
-    }).catch(standardErrorHandler(enqueueSnackbar));
+    }).catch((error) => {
+      setLoadError(true);
+      standardErrorHandler(enqueueSnackbar)(error);
+    });
   }, []);
 
   React.useEffect(() => {
@@ -48,22 +55,32 @@ const Profile = () => {
   };
 
   if (!user) {
-    return null;
+    return (
+      <StandardLayout>
+        {loadError ? (
+          <Typography role="alert">Unable to load your profile. Refresh the page to try again.</Typography>
+        ) : (
+          <CircularProgress aria-label="Loading profile" />
+        )}
+      </StandardLayout>
+    );
   }
+
+  const displayName = user.name?.trim() || user.netid || 'Anubis user';
 
   return (
     <StandardLayout>
       <Box className={classes.bioContainer}>
         <Box className={classes.rowFlex}>
           <Box className={classes.profilePic}>
-            <Typography className={classes.letter}> {user.name[0]}</Typography>
+            <Typography className={classes.letter}> {displayName[0]}</Typography>
           </Box>
           <Box className={classes.profileText}>
             <Typography className={classes.name}>
-              {user.name.trim()}
+              {displayName}
             </Typography>
             <Typography className={classes.netid}>
-              {user.netid.trim()}
+              {user.netid?.trim() || ''}
             </Typography>
           </Box>
         </Box>
