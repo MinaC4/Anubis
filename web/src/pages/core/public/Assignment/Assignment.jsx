@@ -76,8 +76,11 @@ const Assignment = () => {
             const data = standardStatusHandler(response, enqueueSnackbar);
             setRunAssignmentPolling(false);
             setAssignment(data.assignment);
-          }).catch(standardErrorHandler(enqueueSnackbar));
-      }, 1_000);
+          }).catch((error) => {
+            setRunAssignmentPolling(false);
+            standardErrorHandler(enqueueSnackbar)(error);
+          });
+      }, 5_000);
 
       return () => {
         clearTimeout(endPollingTimeout);

@@ -58,7 +58,8 @@ const useStyles = makeStyles((theme) => ({
 const pollSession = (id, state, enqueueSnackbar, n = 0) => () => {
   const {setLoading, setSession} = state;
 
-  if (n > 60) {
+  if (n > 600) {
+    setLoading(false);
     return;
   }
 
@@ -71,7 +72,10 @@ const pollSession = (id, state, enqueueSnackbar, n = 0) => () => {
     }
 
     setTimeout(pollSession(id, state, enqueueSnackbar, ++n), 1000);
-  }).catch(standardErrorHandler(enqueueSnackbar));
+  }).catch((error) => {
+    setLoading(false);
+    standardErrorHandler(enqueueSnackbar)(error);
+  });
 };
 
 

@@ -20,6 +20,10 @@ spec:
       backoffLimit: 5
       template:
         spec:
+          {{- if .Values.imagePullSecret }}
+          imagePullSecrets:
+            - name: {{ .Values.imagePullSecret }}
+          {{- end }}
           {{- if and .Values.nodeSelector (not .Values.debug) (not .Values.localMode) }}
           nodeSelector:
             {{ .Values.nodeSelector | toYaml }}

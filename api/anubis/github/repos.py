@@ -178,6 +178,21 @@ def delete_assignment_repo(user: User, assignment: Assignment, commit: bool = Tr
     repo_name = new_repo_name
 
     if repo is not None:
+        # Parse out github org and repo_name from url before deletion
+        github_org, repo_name = split_github_repo_url(repo.repo_url)
+
+    try:
+        # Keep local submissions until GitHub confirms the remote delete.
+        r = github_rest(f"/repos/{github_org}/{repo_name}", method="delete")
+        if r is None:
+            raise RuntimeError("GitHub did not confirm repository deletion")
+        logger.info(f'successfully deleted repo {r}')
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        logger.error(f"Failed to delete repo {e}")
+        raise
+
+    if repo is not None:
         # Fetch all submissions for the student
         submissions: list[Submission] = Submission.query.filter(
             Submission.assignment_id == assignment.id,
@@ -200,9 +215,6 @@ def delete_assignment_repo(user: User, assignment: Assignment, commit: bool = Tr
             Submission.id.in_(submission_ids),
         ).delete()
 
-        # Parse out github org and repo_name from url before deletion
-        github_org, repo_name = split_github_repo_url(repo.repo_url)
-
         # Delete the repo
         logger.info(f'Deleting assignment repo db record')
         AssignmentRepo.query.filter(AssignmentRepo.id == repo.id).delete(synchronize_session=False)
@@ -210,16 +222,6 @@ def delete_assignment_repo(user: User, assignment: Assignment, commit: bool = Tr
         if commit:
             # Commit the deletes
             db.session.commit()
-
-    try:
-        # Make the github api call to delete the repo on github
-        r = github_rest(f"/repos/{github_org}/{repo_name}", method="delete")
-        logger.info(f'successfully deleted repo {r}')
-    except Exception as e:
-        logger.error(traceback.format_exc())
-        logger.error(f"Failed to delete repo {e}")
-        logger.error(f"continuing")
-
 
 def _create_assignment_repo_obj(
     user: User, assignment: Assignment, new_repo_url: str, commit: bool = True

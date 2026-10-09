@@ -85,7 +85,10 @@ const checkSession = (id, state, enqueueSnackbar, after = null) => {
     if (after !== null) {
       after();
     }
-  }).catch(standardErrorHandler(enqueueSnackbar));
+  }).catch((error) => {
+    setLoading(false);
+    standardErrorHandler(enqueueSnackbar)(error);
+  });
 };
 
 
@@ -97,6 +100,7 @@ const pollSession = (id, state, enqueueSnackbar, n = 0) => () => {
   }
 
   if (n > 600) {
+    state.setLoading(false);
     return;
   }
 
