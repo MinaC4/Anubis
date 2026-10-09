@@ -80,6 +80,8 @@ API env
   value: "0"
 - name: "DOMAIN"
   value: "{{ .Values.domain }}"
+- name: "THEIA_PORT"
+  value: {{ .Values.theia.port | quote }}
 - name: "ANUBIS_IMAGE_REGISTRY"
   value: {{ .Values.imageRegistry | quote }}
 - name: "GITHUB_TOKEN"

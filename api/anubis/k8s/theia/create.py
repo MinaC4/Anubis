@@ -10,6 +10,7 @@ from anubis.constants import (
     THEIA_VALID_NETWORK_POLICIES,
     THEIA_DEFAULT_NETWORK_POLICY
 )
+from anubis.env import env
 from anubis.github.parse import parse_github_repo_name
 from anubis.k8s.pvc.create import create_user_pvc
 from anubis.k8s.pvc.get import get_user_pvc
@@ -538,7 +539,7 @@ def create_theia_k8s_pod_pvc(
         name="theia",
         image_pull_policy="IfNotPresent",
         ports=[
-            k8s.V1ContainerPort(container_port=5000),
+            k8s.V1ContainerPort(container_port=env.THEIA_PORT),
             # Optional proxy ports
             *(k8s.V1ContainerPort(container_port=8000 + i, protocol="TCP") for i in range(11)),
             *(k8s.V1ContainerPort(container_port=8000 + i, protocol="UDP") for i in range(11)),
@@ -585,7 +586,7 @@ def create_theia_k8s_pod_pvc(
         startup_probe=k8s.V1Probe(
             http_get=k8s.V1HTTPGetAction(
                 path="/",
-                port=5000,
+                port=env.THEIA_PORT,
             ),
             initial_delay_seconds=3,
             period_seconds=1,

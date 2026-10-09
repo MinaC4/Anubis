@@ -24,8 +24,8 @@ spec:
           component: proxy
     ports:
     # IDE server port
-    - {protocol: TCP, port: 5000}
-    - {protocol: UDP, port: 5000}
+    - {protocol: TCP, port: {{ .Values.theia.port }}}
+    - {protocol: UDP, port: {{ .Values.theia.port }}}
     # Optional proxy ports
     - {protocol: TCP, port: 8000}
     - {protocol: UDP, port: 8000}
@@ -92,8 +92,8 @@ spec:
           {{- include "chart.selectorLabels" . | nindent 10 }}
           component: proxy
     ports:
-    - {protocol: TCP, port: 5000}
-    - {protocol: UDP, port: 5000}
+    - {protocol: TCP, port: {{ .Values.theia.port }}}
+    - {protocol: UDP, port: {{ .Values.theia.port }}}
     # Optional proxy ports
     - {protocol: TCP, port: 8000}
     - {protocol: UDP, port: 8000}
@@ -173,8 +173,8 @@ spec:
           {{- include "chart.selectorLabels" . | nindent 10 }}
           component: proxy
     ports:
-    - { protocol: TCP, port: 5000 }
-    - { protocol: UDP, port: 5000 }
+    - { protocol: TCP, port: {{ .Values.theia.port }} }
+    - { protocol: UDP, port: {{ .Values.theia.port }} }
 
   egress:
   # Kubernetes System DNS

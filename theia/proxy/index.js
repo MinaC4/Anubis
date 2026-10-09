@@ -9,6 +9,7 @@ const luxon = require("luxon");
 const SECRET_KEY = process.env.SECRET_KEY ?? 'DEBUG';
 const DEBUG = process.env.DEBUG === '1';
 const MAX_PROXY_PORT = 8010;
+const THEIA_PORT = Number(process.env.THEIA_PORT || 5000);
 
 /**
  * Least Recently Used Cache for ip address lookups. Creating an
@@ -84,12 +85,12 @@ const log_req = (req, url) => {
 const parse_port = req => {
   const portr = /\/proxy:\d+|\/proxy%3A\d+|\/proxy%3a\d+/;
   const portm = req.url.match(portr) ?? [];
-  let port = 5000;
+  let port = THEIA_PORT;
   if (portm.length === 1) {
     [, port] = portm[0].split(':');
     req.url = req.url.replaceAll(portm[0], '');
   }
-  return port ?? 5000;
+  return port ?? THEIA_PORT;
 }
 
 const parse_req = req => {
@@ -167,7 +168,7 @@ var proxyServer = http.createServer(function (req, res) {
         return;
       }
 
-      if (port !== 5000 && (port < 8000 || port > MAX_PROXY_PORT)) {
+      if (port !== THEIA_PORT && (port < 8000 || port > MAX_PROXY_PORT)) {
         res.writeHead(400)
         res.end(`Only valid proxy ports are 8000-${MAX_PROXY_PORT}`);
         return;
