@@ -29,6 +29,7 @@ pipeline:
     replicas: 1
 theia:
   enable: true
+  port: 3000
   poller:
     replicas: 1
   proxy:

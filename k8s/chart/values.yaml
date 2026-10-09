@@ -48,6 +48,7 @@ pipeline:
 # Theia IDE proxy and poller
 theia:
   enable: true
+  port: 5000
 
   # theia-poller deployment
   poller:
