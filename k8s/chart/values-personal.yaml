@@ -7,7 +7,7 @@ ideNodeSelector: ""
 imagePullSecret: anubis
 imagePullPolicy: IfNotPresent
 imageRegistry: 192.168.1.8:30082/anubis
-tag: personal-14
+tag: personal-15
 offSemester: true
 pollerIntervalSeconds: 5
 hpa:
@@ -16,7 +16,7 @@ api:
   replicas: 1
   workers: 1
   image: 192.168.1.8:30082/anubis/api
-  tag: personal-14
+  tag: personal-15
 web:
   replicas: 1
   image: 192.168.1.8:30082/anubis/web
@@ -34,7 +34,7 @@ theia:
   proxy:
     replicas: 1
     image: 192.168.1.8:30082/anubis/theia-proxy
-    tag: personal-4
+    tag: personal-5
     portMin: 8000
     portMax: 8001
   prop:
