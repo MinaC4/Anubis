@@ -19,7 +19,7 @@ spec:
     spec:
       template:
         spec:
-          {{- if and .Values.nodeSelector (not .Values.debug) }}
+          {{- if and .Values.nodeSelector (not .Values.debug) (not .Values.localMode) }}
           nodeSelector:
             {{ .Values.nodeSelector | toYaml }}
           {{- end }}

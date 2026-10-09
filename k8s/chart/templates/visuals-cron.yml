@@ -1,5 +1,5 @@
 
-{{- if .Values.reaper.enable }}
+{{- if .Values.visuals.enable }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -20,7 +20,7 @@ spec:
     spec:
       template:
         spec:
-          {{- if and .Values.nodeSelector (not .Values.debug) }}
+          {{- if and .Values.nodeSelector (not .Values.debug) (not .Values.localMode) }}
           nodeSelector:
             {{ .Values.nodeSelector | toYaml }}
           {{- end }}

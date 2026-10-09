@@ -50,7 +50,7 @@ cli_docs:
 autograde_docs:
   enable: false
 reaper:
-  enable: false
+  enable: true
 visuals:
   enable: false
 daily_reaper:
