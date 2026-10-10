@@ -4,8 +4,15 @@ import {useSnackbar} from 'notistack';
 
 import makeStyles from '@mui/styles/makeStyles';
 import Input from '@mui/material/Input';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
 
 import standardStatusHandler from '../../../utils/standardStatusHandler';
+import standardErrorHandler from '../../../utils/standardErrorHandler';
 
 import StandardLayout from '../../../components/shared/Layouts/StandardLayout';
 import UserItem from '../../../components/core/UserItem/UserItem';
@@ -56,6 +63,10 @@ export default function Users() {
   const [refresh, setRefresh] = useState(0);
 
   const [searchQuery, setSearchQuery] = useState(undefined);
+  const [addOpen, setAddOpen] = useState(false);
+  const [netid, setNetid] = useState('');
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
 
   React.useEffect(() => {
     axios.get('/api/admin/students/list').then((response) => {
@@ -106,6 +117,40 @@ export default function Users() {
     <StandardLayout>
       <SectionHeader isPage title={'Students'} />
       <Divider />
+      <Button variant="contained" onClick={() => setAddOpen(true)}>Add Student</Button>
+      <Dialog open={addOpen} onClose={() => setAddOpen(false)} aria-labelledby="add-local-student-title">
+        <DialogTitle id="add-local-student-title">Add local student</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus margin="dense" label="NetID" value={netid}
+            onChange={(event) => setNetid(event.target.value)} fullWidth
+          />
+          <TextField
+            margin="dense" label="Name" value={name}
+            onChange={(event) => setName(event.target.value)} fullWidth
+          />
+          <TextField
+            margin="dense" label="Student password" type="password"
+            helperText="At least 12 characters; the student uses this on the sign-in page."
+            value={password} onChange={(event) => setPassword(event.target.value)} fullWidth
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddOpen(false)}>Cancel</Button>
+          <Button variant="contained" disabled={!netid.trim() || !name.trim() || password.length < 12} onClick={() => {
+            axios.post('/api/admin/students/create-local', {netid, name, password}).then((response) => {
+              if (standardStatusHandler(response, enqueueSnackbar)) {
+                setAddOpen(false);
+                setNetid('');
+                setName('');
+                setPassword('');
+                setSearchQuery('');
+                setRefresh((value) => value + 1);
+              }
+            }).catch(standardErrorHandler(enqueueSnackbar));
+          }}>Create</Button>
+        </DialogActions>
+      </Dialog>
       <Input
         placeholder={'Search Student By NetId, Name or Github Username'}
         value={searchQuery}
@@ -114,9 +159,9 @@ export default function Users() {
       >
       </Input>
       <ListHeader sections={['Name', 'Github Username', 'netid', 'View']} />
-      {students[page] && students[0][0] && (
+      {students[page]?.length > 0 && (
         <div className={classes.studentList}>
-          {(students[0].length > 1) ? students[page].map((student, index) => (
+          {students[page].map((student, index) => (
             <UserItem
               key={`${student.netid}-${index}`}
               githubUsername={student.github_username}
@@ -124,17 +169,10 @@ export default function Users() {
               netid={student.netid}
               name={student.name}
             />
-          )) : (
-            <UserItem
-              key={`${students[0][0].netid}`}
-              githubUsername={students[0][0].github_username}
-              id={students[0][0].id}
-              netid={students[0][0].netid}
-              name={students[0][0].name}
-            />
-          )}
+          ))}
         </div>
       )}
+      {students.length === 0 && <p>No students found in this course.</p>}
       {students.length > 1 && (
         <ListPagination
           page={page}

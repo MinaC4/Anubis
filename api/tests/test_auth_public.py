@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 from flask import Flask
 import pytest
+from werkzeug.security import generate_password_hash
 
 from anubis.env import env
 from anubis.utils.exceptions import AuthenticationError
@@ -15,6 +16,31 @@ def test_personal_github_link_requires_an_anubis_user(monkeypatch):
     with app.test_request_context("/api/public/github/login"):
         with pytest.raises(AuthenticationError):
             auth.public_github_link()
+
+
+def test_local_student_can_sign_in_with_its_password(monkeypatch):
+    student = SimpleNamespace(netid="student1", disabled=False, local_password_hash=generate_password_hash("student-password-123"))
+
+    class UserQuery:
+        def filter_by(self, **kwargs):
+            assert kwargs == {"netid": "student1"}
+            return self
+
+        def first(self):
+            return student
+
+    monkeypatch.setattr(env, "LOCAL_AUTH_USERNAME", "mina")
+    monkeypatch.setattr(env, "LOCAL_AUTH_PASSWORD", "admin-password")
+    monkeypatch.setattr(auth.User, "query", UserQuery())
+    monkeypatch.setattr(auth, "create_token", lambda netid: f"token-for-{netid}")
+    app = Flask(__name__)
+    app.add_url_rule("/login", view_func=auth.public_login, methods=["GET", "POST"])
+
+    response = app.test_client().post("/login", data={"username": "student1", "password": "student-password-123"})
+
+    assert response.status_code == 302
+    assert response.location == "/"
+    assert response.headers["Set-Cookie"].startswith("token=token-for-student1;")
 
 
 def test_github_oauth_requires_study_access_code_for_anonymous_user(monkeypatch):

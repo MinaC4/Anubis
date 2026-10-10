@@ -8,6 +8,7 @@ from urllib.parse import quote
 import json
 import requests
 from flask import Blueprint, make_response, redirect, request
+from werkzeug.security import check_password_hash
 
 from anubis.constants import NYU_DOMAIN
 from anubis.env import env
@@ -35,11 +36,19 @@ github_oauth_ = Blueprint("public-github-oauth", __name__, url_prefix="/public/g
 def public_login():
     if env.LOCAL_AUTH_USERNAME and env.LOCAL_AUTH_PASSWORD:
         if request.method == "POST":
+            username = request.form.get("username", "").strip() or env.LOCAL_AUTH_USERNAME
             password = request.form.get("password", "")
-            if not hmac.compare_digest(password.encode(), env.LOCAL_AUTH_PASSWORD.encode()):
-                return _local_login_page("Invalid password"), 401
-
-            user = User.query.filter_by(netid=env.LOCAL_AUTH_USERNAME).first()
+            is_admin_login = username == env.LOCAL_AUTH_USERNAME and hmac.compare_digest(
+                password.encode(), env.LOCAL_AUTH_PASSWORD.encode()
+            )
+            user = User.query.filter_by(netid=username).first()
+            is_student_login = (
+                user is not None
+                and user.local_password_hash
+                and check_password_hash(user.local_password_hash, password)
+            )
+            if not is_admin_login and not is_student_login:
+                return _local_login_page("Invalid username or password"), 401
             if user is None:
                 user = User(
                     netid=env.LOCAL_AUTH_USERNAME,
@@ -49,7 +58,7 @@ def public_login():
                 )
                 db.session.add(user)
                 db.session.commit()
-            elif user.disabled or not user.is_superuser:
+            elif user.disabled or (is_admin_login and not user.is_superuser):
                 return _local_login_page("Local account is unavailable"), 403
 
             token = create_token(user.netid)
@@ -66,12 +75,12 @@ def public_login():
 
 def _local_login_page(error=None):
     message = f"<p>{escape(error)}</p>" if error else ""
-    username = escape(env.LOCAL_AUTH_USERNAME)
     return f"""<!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
 <title>Anubis sign in</title><body>
-<main><h1>Anubis</h1><p>Sign in as {username}</p>{message}
-<form method="post"><label>Password <input type="password" name="password" required autofocus></label>
+<main><h1>Anubis</h1>{message}
+<form method="post"><label>Username <input name="username" autocomplete="username" required autofocus></label>
+<label>Password <input type="password" name="password" autocomplete="current-password" required></label>
 <button type="submit">Sign in</button></form></main></body></html>"""
 
 

@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
 
 import Grid from '@mui/material/Grid';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
 import {DataGrid} from '@mui/x-data-grid';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
@@ -19,6 +21,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 
 import axios from 'axios';
 import {useSnackbar} from 'notistack';
+import {useLocation} from 'react-router-dom';
 
 import useQuery from '../../../hooks/useQuery';
 import UserCard from '../../../components/core/Users/UserCard';
@@ -29,6 +32,7 @@ import standardErrorHandler from '../../../utils/standardErrorHandler';
 
 export default function User() {
   const query = useQuery();
+  const location = useLocation();
   const {enqueueSnackbar} = useSnackbar();
   const [courses, setCourses] = useState([]);
   const [repos, setRepos] = useState([]);
@@ -37,12 +41,25 @@ export default function User() {
   const [age, setAge] = useState(null);
   const [confirm, setConfirm] = useState(null);
   const [reload, setReload] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const userId = query.get('userId');
 
   React.useEffect(() => {
-    axios.get(`/api/admin/students/info/${query.get('userId')}`).then((response) => {
+    setUser(null);
+    setLoading(true);
+    setLoadError(false);
+    if (!userId) {
+      setLoading(false);
+      setLoadError(true);
+      return;
+    }
+    axios.get(`/api/admin/students/info/${userId}`).then((response) => {
       const data = standardStatusHandler(response, enqueueSnackbar);
       if (data?.user) {
         setUser(data.user);
+      } else {
+        setLoadError(true);
       }
       if (data?.courses) {
         setCourses(data.courses);
@@ -56,11 +73,19 @@ export default function User() {
       if (data?.account_age) {
         setAge(data.account_age);
       }
-    }).catch(standardErrorHandler(enqueueSnackbar));
-  }, [reload]);
+    }).catch((error) => {
+      setLoadError(true);
+      standardErrorHandler(enqueueSnackbar)(error);
+    }).finally(() => setLoading(false));
+  }, [reload, location.search]);
 
-  if (!user) {
-    return null;
+  if (loading) return <CircularProgress aria-label="Loading student" />;
+  if (loadError || !user) {
+    return (
+      <Alert severity="error">
+        Unable to load this user. Check the user link and your course permissions, then try again.
+      </Alert>
+    );
   }
 
   const deleteRepo = (row) => {

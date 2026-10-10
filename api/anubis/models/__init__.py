@@ -46,6 +46,7 @@ class User(db.Model):
 
     # Fields
     netid: str = Column(String(length=128), unique=True, nullable=False)
+    local_password_hash = Column(String(length=512), nullable=True)
     github_username = Column(Text(length=2 ** 14), index=True)
     name = Column(Text(length=2 ** 14))
     is_superuser: bool = Column(Boolean, nullable=False, default=False)

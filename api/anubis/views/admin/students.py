@@ -1,6 +1,11 @@
+import re
+
 from flask import Blueprint
+from sqlalchemy.exc import IntegrityError
+from werkzeug.security import generate_password_hash
 
 from anubis.ide.get import get_recent_sessions
+from anubis.env import env
 from anubis.lms.courses import assert_course_context, assert_course_superuser, course_context
 from anubis.lms.repos import get_repos
 from anubis.lms.students import get_students
@@ -47,6 +52,35 @@ def admin_students_list():
 
     # Pass back the students
     return success_response({"students": students})
+
+
+@students_.route("/create-local", methods=["POST"])
+@require_admin()
+@json_endpoint(required_fields=[("netid", str), ("name", str), ("password", str)])
+def admin_students_create_local(netid: str, name: str, password: str):
+    req_assert(bool(env.LOCAL_AUTH_USERNAME), message="Local student accounts are unavailable")
+    assert_course_superuser(course_context.id)
+    netid, name = netid.strip(), name.strip()
+    req_assert(
+        bool(re.fullmatch(r"[A-Za-z0-9._-]{1,128}", netid)),
+        message="NetID may contain letters, numbers, dots, underscores and hyphens",
+    )
+    req_assert(bool(name), message="Name is required")
+    req_assert(len(password) >= 12, message="Student password must be at least 12 characters")
+    req_assert(len(password) <= 256, message="Student password must be at most 256 characters")
+    req_assert(netid != env.LOCAL_AUTH_USERNAME, message="NetID is reserved for the administrator")
+    req_assert(User.query.filter_by(netid=netid).first() is None, message="NetID already exists")
+
+    student = User(netid=netid, name=name, local_password_hash=generate_password_hash(password))
+    db.session.add(student)
+    try:
+        db.session.flush()
+        db.session.add(InCourse(owner_id=student.id, course_id=course_context.id))
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        req_assert(False, message="NetID already exists")
+    return success_response({"student": student.data})
 
 
 @students_.route("/info/<string:id>")
