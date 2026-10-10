@@ -28,6 +28,7 @@ const Course = () => {
   const [assignments, setAssignments] = useState(null);
   const [lectures, setLectures] = useState([]);
   const [files, setFiles] = useState([]);
+  const [savingProgress, setSavingProgress] = useState({});
 
   const courseId = query.get('courseId');
 
@@ -69,6 +70,20 @@ const Course = () => {
   }, [courseId]);
 
   const lectureFileIds = new Set(lectures.map(({static_file: file}) => file?.id).filter(Boolean));
+
+  const toggleLectureProgress = (lectureId, completed) => {
+    if (savingProgress[lectureId]) return;
+    setSavingProgress((current) => ({...current, [lectureId]: true}));
+    axios.post(`/api/public/lectures/progress/${lectureId}`, {completed}).then((response) => {
+      const data = standardStatusHandler(response, enqueueSnackbar);
+      if (data) {
+        setLectures((current) => current.map((lecture) =>
+          lecture.id === lectureId ? {...lecture, completed: data.completed} : lecture));
+      }
+    }).catch(standardErrorHandler(enqueueSnackbar)).finally(() => {
+      setSavingProgress((current) => ({...current, [lectureId]: false}));
+    });
+  };
 
 
   return (
@@ -118,6 +133,11 @@ const Course = () => {
             <Typography className={classes.sectionHeader}>
               Videos and Course Materials
             </Typography>
+            {lectures.length > 0 && (
+              <Typography color="textSecondary" aria-live="polite">
+                Course material progress: {lectures.filter((lecture) => lecture.completed).length} / {lectures.length}
+              </Typography>
+            )}
             {lectures.map((lecture) => (
               <LectureItem
                 key={lecture.id}
@@ -128,6 +148,9 @@ const Course = () => {
                 fileAttachment={lecture.static_file ?
                   getStaticFileUrl(lecture.static_file) : null}
                 externalUrl={lecture.external_url}
+                completed={lecture.completed}
+                savingProgress={savingProgress[lecture.id]}
+                onToggleProgress={(completed) => toggleLectureProgress(lecture.id, completed)}
               />
             ))}
             {files.filter((file) => !lectureFileIds.has(file.id)).map((file) => (

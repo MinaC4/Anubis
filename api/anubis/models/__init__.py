@@ -972,6 +972,20 @@ class LectureNotes(db.Model):
         }
 
 
+class LectureProgress(db.Model):
+    __tablename__ = "lecture_progress"
+    __allow_unmapped__ = True
+    __table_args__ = {"mysql_charset": DB_CHARSET, "mysql_collate": DB_COLLATION}
+
+    owner_id: str = Column(
+        String(length=default_id_length), ForeignKey(User.id, ondelete="CASCADE"), primary_key=True
+    )
+    lecture_id: str = Column(
+        String(length=default_id_length), ForeignKey(LectureNotes.id, ondelete="CASCADE"), primary_key=True
+    )
+    completed_at: datetime = Column(DateTime, nullable=False, default=datetime.now)
+
+
 class EmailTemplate(db.Model):
     __tablename__ = "email_template"
     __allow_unmapped__ = True

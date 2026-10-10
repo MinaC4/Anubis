@@ -4,6 +4,8 @@ import React from 'react';
 import FeaturedVideoIcon from '@mui/icons-material/FeaturedVideo';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import Item from '../../shared/Item/Item';
 import {useStyles} from './LectureItem.styles';
 
@@ -14,6 +16,9 @@ const LectureItem = ({
   id,
   fileAttachment,
   externalUrl,
+  completed = false,
+  savingProgress = false,
+  onToggleProgress,
 }) => {
   const classes = useStyles();
 
@@ -26,6 +31,19 @@ const LectureItem = ({
     >
       <Typography className = {classes.postTimeText}>{postTime}</Typography>
       <Typography>{title}</Typography>
+      {onToggleProgress && (
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={completed}
+              disabled={savingProgress}
+              onChange={(event) => onToggleProgress(event.target.checked)}
+              inputProps={{'aria-label': `Mark ${title} completed`}}
+            />
+          }
+          label="Completed"
+        />
+      )}
       <Button component="a" href={externalUrl || fileAttachment} target="_blank" rel="noopener noreferrer">
         {externalUrl ? 'Open course link' : 'View Lecture Attachment'}
       </Button>
