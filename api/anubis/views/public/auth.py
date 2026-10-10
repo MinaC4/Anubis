@@ -1,5 +1,6 @@
 import traceback
 import hmac
+import os
 from html import escape
 from urllib.parse import urlunparse
 from urllib.parse import quote
@@ -208,6 +209,17 @@ def public_github_link():
             raise AuthenticationError()
 
     return github_provider.authorize(callback="https://{}/api/public/github/oauth".format(env.DOMAIN))
+
+
+@github_oauth_.get("/status")
+@json_response
+def public_github_status():
+    configured = (
+        bool(os.environ.get("GITHUB_TOKEN"))
+        if env.LOCAL_AUTH_USERNAME
+        else bool(env.OAUTH_GITHUB_CONSUMER_KEY and env.OAUTH_GITHUB_CONSUMER_SECRET)
+    )
+    return success_response({"configured": configured})
 
 
 @github_oauth_.route("/oauth")

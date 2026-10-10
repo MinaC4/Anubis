@@ -9,6 +9,7 @@ import GitHub from '@mui/icons-material/GitHub';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 
 import {useStyles} from './Profile.styles';
 import standardStatusHandler from '../../../../utils/standardStatusHandler';
@@ -23,6 +24,7 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [userGroup, setUserGroup] = useState(null);
   const [loadError, setLoadError] = useState(false);
+  const [githubConfigured, setGithubConfigured] = useState(null);
   const classes = useStyles();
   const {enqueueSnackbar} = useSnackbar();
 
@@ -38,6 +40,13 @@ const Profile = () => {
       setLoadError(true);
       standardErrorHandler(enqueueSnackbar)(error);
     });
+  }, []);
+
+  React.useEffect(() => {
+    axios.get('/api/public/github/status').then((response) => {
+      const data = standardStatusHandler(response, enqueueSnackbar);
+      setGithubConfigured(data?.configured === true);
+    }).catch(() => setGithubConfigured(null));
   }, []);
 
   React.useEffect(() => {
@@ -114,11 +123,18 @@ const Profile = () => {
             className={classes.saveButton}
             variant={'contained'}
             component="a"
+            disabled={githubConfigured === false}
             href="/api/public/github/login"
           >
             Link Account with Github
           </Button>
         </Box>
+        {githubConfigured === false && (
+          <Alert severity="info">
+            GitHub is not configured. On the Anubis host, run
+            {' '}<code>python3 k8s/personal/configure-github.py</code> to install a token.
+          </Alert>
+        )}
       </Box>
       {[
         {key: 'deadline_email_enabled', title: 'Deadline Notifications'},
