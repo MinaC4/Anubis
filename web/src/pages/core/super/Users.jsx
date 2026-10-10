@@ -20,6 +20,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Box from '@mui/material/Box';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import {useTheme} from '@mui/material/styles';
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
@@ -174,6 +176,8 @@ function UserAdd({setReset}) {
   const [open, setOpen] = React.useState(false);
   const [netid, setNetid] = React.useState('');
   const [name, setName] = React.useState('');
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
   const {enqueueSnackbar} = useSnackbar();
 
   const close = () => {
