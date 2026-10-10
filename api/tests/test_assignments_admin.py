@@ -46,6 +46,30 @@ def test_assignment_admin():
     permission_test(f"/admin/assignments/sync", method="post", json={"assignment": sample_sync})
 
 
+def test_assignment_external_url():
+    superuser = Session("superuser")
+    assignment = superuser.post("/admin/assignments/add")["assignment"]
+    assignment_id = assignment["id"]
+    try:
+        assignment["external_url"] = "https://moodle.example/course/assignment/7"
+        superuser.post_json("/admin/assignments/save", json={"assignment": assignment})
+        saved = superuser.get(f"/admin/assignments/get/{assignment_id}")["assignment"]
+        assert saved["external_url"] == assignment["external_url"]
+
+        assignment["external_url"] = "javascript:alert(1)"
+        superuser.post_json("/admin/assignments/save", json={"assignment": assignment}, should_fail=True)
+        saved = superuser.get(f"/admin/assignments/get/{assignment_id}")["assignment"]
+        assert saved["external_url"] == "https://moodle.example/course/assignment/7"
+
+        assignment["external_url"] = saved["external_url"]
+        assignment["course_id"] = "another-course"
+        superuser.post_json("/admin/assignments/save", json={"assignment": assignment}, should_fail=True)
+        saved = superuser.get(f"/admin/assignments/get/{assignment_id}")["assignment"]
+        assert saved["course_id"] == superuser.course_id
+    finally:
+        superuser.delete(f"/admin/assignments/delete/{assignment_id}")
+
+
 @pytest.mark.parametrize("add_questions,assign_questions,add_responses", [
     (False, False, False),
     (True, False, False),

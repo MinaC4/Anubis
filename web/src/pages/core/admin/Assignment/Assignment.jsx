@@ -24,6 +24,7 @@ const useStyles = makeStyles((theme) => ({
 const editableFields = [
   {title: 'Assignment Controls'},
   {field: 'name', label: 'Assignment Name'},
+  {field: 'external_url', label: 'External Course Assignment Link'},
   {field: 'github_template', label: 'Github Template (ex: AnubisLMS/xv6)'},
   {field: 'theia_image', label: 'IDE Docker Image'},
   {field: 'theia_options', label: 'IDE Options JSON', type: 'json'},

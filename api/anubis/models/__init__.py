@@ -236,6 +236,7 @@ class Assignment(db.Model):
     name = Column(Text(length=2 ** 14), nullable=False, index=True)
     hidden: bool = Column(Boolean, default=False)
     description = Column(Text(length=2 ** 14), nullable=True)
+    external_url = Column(Text(length=2 ** 14), nullable=True)
     unique_code = Column(
         String(length=8),
         unique=True,
@@ -301,6 +302,7 @@ class Assignment(db.Model):
             "hide_due_date":           self.hide_due_date,
             "course":                  self.course.data,
             "description":             self.description,
+            "external_url":            self.external_url,
             "visible_to_students":     not self.hidden and (datetime.now() > self.release_date),
             "ide_active":              self.due_date + timedelta(days=3 * 7) > datetime.now(),
             "tests":                   get_assignment_tests(self, visible_only=True),

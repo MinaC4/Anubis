@@ -238,6 +238,18 @@ const Assignment = () => {
                   {assignment.description ?? ''}
                 </ReactMarkdownWithHtml>
               </Box>
+              {assignment.external_url && (
+                <Button
+                  color="primary"
+                  variant="contained"
+                  component="a"
+                  href={assignment.external_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open External Assignment
+                </Button>
+              )}
             </Box>
             <br/>
             <br/>

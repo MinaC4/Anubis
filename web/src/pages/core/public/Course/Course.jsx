@@ -68,6 +68,14 @@ const Course = () => {
           </Box>
           <Divider/>
           <Box className={classes.content}>
+            {course.description && <Typography>{course.description}</Typography>}
+            {course.course_url && (
+              <Typography>
+                <a href={course.course_url} target="_blank" rel="noopener noreferrer">
+                  Open Course Platform
+                </a>
+              </Typography>
+            )}
             <Typography className={classes.sectionHeader}>
               Instructors / Teaching Assistants
             </Typography>

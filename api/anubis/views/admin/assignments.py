@@ -26,6 +26,7 @@ from anubis.utils.data import rand, req_assert, row2dict
 from anubis.utils.http import error_response, success_response
 from anubis.utils.http.decorators import json_endpoint, json_response, load_from_id
 from anubis.utils.logging import logger
+from anubis.utils.urls import is_safe_http_url
 
 assignments = Blueprint("admin-assignments", __name__, url_prefix="/admin/assignments")
 
@@ -406,6 +407,11 @@ def admin_assignments_save(assignment: dict):
 
     assert_course_context(db_assignment)
 
+    req_assert(
+        assignment.get("course_id", db_assignment.course_id) == db_assignment.course_id,
+        message="An assignment cannot be moved to another course.",
+    )
+
     # Update all it's fields
     for key, value in assignment.items():
 
@@ -428,6 +434,11 @@ def admin_assignments_save(assignment: dict):
             continue
 
         setattr(db_assignment, key, value)
+
+    req_assert(
+        not db_assignment.external_url or is_safe_http_url(db_assignment.external_url),
+        message="Assignment link must be a valid HTTP or HTTPS URL without embedded credentials.",
+    )
 
     # Verify basics
     req_assert(
