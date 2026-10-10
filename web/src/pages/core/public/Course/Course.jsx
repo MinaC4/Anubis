@@ -13,6 +13,10 @@ import {useStyles} from './Course.styles';
 import useQuery from '../../../../hooks/useQuery';
 import standardErrorHandler from '../../../../utils/standardErrorHandler';
 import AssignmentItem from '../../../../components/core/AssignmentItem/AssignmentItem';
+import LectureItem from '../../../../components/core/LectureItem/LectureItem';
+
+const getStaticFileUrl = ({path, filename}) =>
+  `/api/public/static${path}/${encodeURIComponent(filename)}`;
 
 
 const Course = () => {
@@ -22,6 +26,8 @@ const Course = () => {
 
   const [course, setCourse] = useState(null);
   const [assignments, setAssignments] = useState(null);
+  const [lectures, setLectures] = useState([]);
+  const [files, setFiles] = useState([]);
 
   const courseId = query.get('courseId');
 
@@ -32,7 +38,7 @@ const Course = () => {
         setCourse(data.course);
       }
     }).catch(standardErrorHandler(enqueueSnackbar));
-  }, []);
+  }, [courseId]);
 
 
   React.useEffect(() => {
@@ -42,7 +48,27 @@ const Course = () => {
         setAssignments(data.assignments);
       }
     }).catch(standardErrorHandler(enqueueSnackbar));
-  }, []);
+  }, [courseId]);
+
+  React.useEffect(() => {
+    axios.get('/api/public/lectures/list', {params: {courseId}}).then((response) => {
+      const data = standardStatusHandler(response, enqueueSnackbar);
+      if (data) {
+        setLectures(data.lectures);
+      }
+    }).catch(standardErrorHandler(enqueueSnackbar));
+  }, [courseId]);
+
+  React.useEffect(() => {
+    axios.get('/api/public/static/list', {params: {courseId}}).then((response) => {
+      const data = standardStatusHandler(response, enqueueSnackbar);
+      if (data) {
+        setFiles(data.files);
+      }
+    }).catch(standardErrorHandler(enqueueSnackbar));
+  }, [courseId]);
+
+  const lectureFileIds = new Set(lectures.map(({static_file: file}) => file?.id).filter(Boolean));
 
 
   return (
@@ -88,6 +114,36 @@ const Course = () => {
               ))}
             </Box>
             <br/>
+            <br/>
+            <Typography className={classes.sectionHeader}>
+              Videos and Course Materials
+            </Typography>
+            {lectures.map((lecture) => (
+              <LectureItem
+                key={lecture.id}
+                course={lecture.course}
+                postTime={lecture.post_time}
+                title={lecture.title}
+                id={lecture.id}
+                fileAttachment={lecture.static_file ?
+                  getStaticFileUrl(lecture.static_file) : null}
+                externalUrl={lecture.external_url}
+              />
+            ))}
+            {files.filter((file) => !lectureFileIds.has(file.id)).map((file) => (
+              <Typography key={file.id}>
+                <a
+                  href={getStaticFileUrl(file)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {file.filename}
+                </a>
+              </Typography>
+            ))}
+            {lectures.length === 0 && files.length === 0 && (
+              <Typography color="textSecondary">No course materials added yet.</Typography>
+            )}
             <br/>
             <Typography className={classes.sectionHeader}>
               Assignments

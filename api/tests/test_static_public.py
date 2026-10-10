@@ -10,10 +10,18 @@ def test_static_public():
     filename = "logo.png"
     prof = Session("professor")
     logo_file = io.BytesIO(logo)
-    blob_id = prof.post("/admin/static/upload", files={filename: logo_file})["blob"]["path"].lstrip("/")
+    blob = prof.post("/admin/static/upload", files={filename: logo_file})["blob"]
+    blob_id = blob["path"].lstrip("/")
 
     # Now test as a student
     student = Session("student")
+    files = student.get("/public/static/list", params={"courseId": student.course_id})["files"]
+    assert any(file["id"] == blob["id"] for file in files)
+
+    outsider = Session("student", new=True, add_to_os=False)
+    files = outsider.get("/public/static/list", params={"courseId": student.course_id})["files"]
+    assert not files
+
     r = student.get(f"/public/static/{blob_id}", return_request=True, skip_verify=True)
     assert r.status_code == 200
     assert r.headers.get("content-type") == "image/png"

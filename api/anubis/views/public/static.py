@@ -1,12 +1,37 @@
-from flask import Blueprint
-from sqlalchemy.orm import undefer
+from flask import Blueprint, request
+from sqlalchemy.orm import defer, undefer
 from sqlalchemy.sql import or_
 
+from anubis.lms.courses import get_student_course_ids
 from anubis.models import StaticFile
+from anubis.utils.auth.http import require_user
+from anubis.utils.auth.user import current_user
 from anubis.utils.cache import cache
+from anubis.utils.http import success_response
+from anubis.utils.http.decorators import json_response
 from anubis.utils.http.files import make_blob_response
 
 static = Blueprint("public-static", __name__, url_prefix="/public/static")
+
+
+@static.get("/list")
+@require_user()
+@json_response
+def public_static_list():
+    course_id = request.args.get("courseId")
+    course_ids = get_student_course_ids(current_user)
+    if course_id:
+        course_ids = [course_id] if course_id in course_ids else []
+    files = (
+        StaticFile.query.filter(
+            StaticFile.course_id.in_(course_ids),
+            StaticFile.hidden == False,
+        )
+        .order_by(StaticFile.created.desc())
+        .options(defer(StaticFile.blob))
+        .all()
+    )
+    return success_response({"files": [file.data for file in files]})
 
 
 @static.route("/<string:path>")
