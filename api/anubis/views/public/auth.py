@@ -20,6 +20,7 @@ from anubis.utils.auth.token import create_token
 from anubis.utils.auth.user import current_user, get_current_user
 from anubis.utils.data import is_debug
 from anubis.utils.http import success_response, get_string_arg
+from anubis.utils.http.decorators import json_response
 from anubis.utils.exceptions import AuthenticationError
 from anubis.utils.config import get_config_str
 from anubis.utils.logging import logger
